@@ -29,6 +29,11 @@ from trakt_manager.trakt_lists import TraktListsAPI, UserListSummary
 SORT_BY = "rank"
 SORT_HOW = "asc"
 
+NOTES_SKIPPED_WARNING = (
+    "Tu cuenta de Trakt no es VIP: Trakt no guarda notas en los elementos de una lista, "
+    "así que se omiten (la lista se crea igual, sin notas)."
+)
+
 
 class MetadataChange(BaseModel):
     """Un metadato de la lista que cambiará (por ejemplo, la privacidad)."""
@@ -220,15 +225,25 @@ class ListSynchronizer:
             raise NotAuthenticatedError("Para sincronizar hace falta una sesión de Trakt: ejecuta 'trakt-manager auth login'.")
 
         report = self._resolver.resolve(definition, include_extras)
+        desired_items, warnings = self._adapt_notes_to_account(report.items, session)
 
         existing_list = self._find_existing_list(definition) if session else None
         existing_items = self._lists_api.get_items(existing_list.trakt_id) if existing_list else []
-        plan = plan_sync(definition, report.items, existing_list, existing_items, compared_with_account=session)
+        plan = plan_sync(definition, desired_items, existing_list, existing_items, compared_with_account=session)
 
         if dry_run:
-            return SyncResult(list_name=definition.name, dry_run=True, applied=False, list_id=plan.list_id, report=report, plan=plan)
+            return SyncResult(
+                list_name=definition.name,
+                dry_run=True,
+                applied=False,
+                list_id=plan.list_id,
+                report=report,
+                plan=plan,
+                warnings=warnings,
+            )
 
-        list_id, warnings = self._apply(definition, plan)
+        list_id, apply_warnings = self._apply(definition, plan)
+        warnings.extend(apply_warnings)
         return SyncResult(
             list_name=definition.name,
             dry_run=False,
@@ -238,6 +253,23 @@ class ListSynchronizer:
             plan=plan,
             warnings=warnings,
         )
+
+    def _adapt_notes_to_account(self, items: list[DesiredItem], session: bool) -> tuple[list[DesiredItem], list[str]]:
+        """Quita las notas de los elementos si la cuenta no puede guardarlas.
+
+        Sin VIP, Trakt descarta las notas en silencio. Si se dejaran, el plan
+        propondría actualizarlas en cada sincronización y nunca llegaría a "sin
+        cambios". Quitándolas aquí no se envían, no se comparan y se avisa una vez.
+
+        Returns:
+            Los elementos a usar y los avisos para el resultado.
+        """
+        if not session or not any(item.notes for item in items):
+            # Sin sesión no se puede preguntar a Trakt; sin notas no hay nada que decidir.
+            return items, []
+        if self._lists_api.account_supports_list_notes():
+            return items, []
+        return [item.model_copy(update={"notes": None}) for item in items], [NOTES_SKIPPED_WARNING]
 
     def _find_existing_list(self, definition: ListDefinition) -> UserListSummary | None:
         """Encuentra la lista de la definición: por id fijado o, si no, por nombre exacto."""

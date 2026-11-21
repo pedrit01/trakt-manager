@@ -33,10 +33,12 @@
 - [x] 5.3 Implementar la aplicación del plan (crear o `PUT` de la lista con `sort_by: rank`, `items/remove`, `items` en lotes, relectura y `items/reorder`) con dry-run que no hace ninguna escritura; verificar con tests simulados que comprueban las peticiones enviadas y que el dry-run no envía ninguna petición POST, PUT o DELETE
 - [x] 5.4 Implementar la consulta de listas del usuario y de los elementos de una lista; verificar con tests simulados
 
+- [x] 5.5 Omitir las notas en cuentas sin VIP (detectado en la prueba real: Trakt las descarta y el plan proponía 36 cambios de nota en cada sincronización); verificar con tests de cuenta sin VIP (un aviso, sin notas, segunda sincronización sin cambios ni escrituras) y de cuenta VIP
+
 ## 6. CLI (cli)
 
 - [x] 6.1 Implementar `auth login|status|logout`, `validate`, `sync [--dry-run] [--include-extras]`, `lists`, `show` y `serve` con Typer, `--json` en los comandos de resultado y códigos de salida según el spec; verificar con tests de `typer.testing.CliRunner` (validación OK y KO, dry-run, sync sin sesión, salida `--json` parseable)
-- [ ] 6.2 Documentar los comandos del CLI en `README.md` con ejemplos y verificar que `trakt-manager sync lists/doomsday.yaml --dry-run` funciona como está escrito (con un `TRAKT_CLIENT_ID` real)
+- [x] 6.2 Documentar los comandos del CLI en `README.md` con ejemplos y verificar que `trakt-manager sync lists/doomsday.yaml --dry-run` funciona como está escrito (con un `TRAKT_CLIENT_ID` real)
 
 ## 7. API HTTP (web-api)
 
@@ -44,13 +46,13 @@
 - [x] 7.2 Implementar `POST /auth/device` (hilo de sondeo, un solo flujo activo), `GET /auth/status` y `DELETE /auth`; verificar con tests simulados de inicio, estado pendiente y autorizado
 - [x] 7.3 Implementar `GET /definitions`, `GET /definitions/{nombre}`, `POST /validate` (422 con errores), `POST /sync` (cuerpo JSON/YAML) y `POST /definitions/{nombre}/sync` con `dry_run`/`include_extras`, 409 sin sesión y lock por lista (409 si hay otra sync en curso); verificar con tests de `TestClient` de cada escenario del spec y comprobar que la respuesta coincide con la salida `--json` del CLI
 - [x] 7.4 Implementar `GET /lists` y `GET /lists/{id}` y verificar con tests
-- [ ] 7.5 Documentar la API (autenticación, rutas, `/docs`) en `README.md` y verificar los ejemplos `curl` contra el servicio en local
+- [x] 7.5 Documentar la API (autenticación, rutas, `/docs`) en `README.md` y verificar los ejemplos `curl` contra el servicio en local
 
 ## 8. Contenedor (container-runtime)
 
 - [x] 8.1 Crear un `Dockerfile` multi-stage (`python:3.12-slim`, usuario `app` no root, `DATA_DIR=/data` propiedad de `app`, `ENTRYPOINT ["trakt-manager"]`, `CMD ["serve"]`, `HEALTHCHECK` contra `/health`) y un `.dockerignore`; verificar que `docker build` funciona y que la imagen no contiene `.env` (`docker run --rm --entrypoint ls <img> -a /app`) y que `whoami` devuelve `app`
 - [x] 8.2 Crear `docker-compose.yml` (servicio `trakt-manager`, `env_file`, volumen `trakt-data:/data`, `./lists:/app/lists:ro`, puerto `${API_BIND:-127.0.0.1}:${API_PORT:-8000}:8000`) y `.env.example`; verificar que `docker compose up -d` deja el servicio `healthy` y que `docker compose run --rm trakt-manager validate lists/doomsday.yaml` devuelve 0
-- [ ] 8.3 Documentar en `README.md` la puesta en marcha con Docker (crear la app en Trakt, `.env`, `auth login` dentro del contenedor, acceso remoto con `API_BIND`/proxy inverso) y verificar los pasos desde cero
+- [x] 8.3 Documentar en `README.md` la puesta en marcha con Docker (crear la app en Trakt, `.env`, `auth login` dentro del contenedor, acceso remoto con `API_BIND`/proxy inverso) y verificar los pasos desde cero
 
 ## 9. Integración y retirada del script
 

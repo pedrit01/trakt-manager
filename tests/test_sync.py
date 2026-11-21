@@ -7,7 +7,7 @@ from trakt_manager.definitions import parse_definition_data
 from trakt_manager.errors import NotAuthenticatedError
 from trakt_manager.items import DesiredItem, ExistingItem
 from trakt_manager.resolver import EntryResolver
-from trakt_manager.sync import ListSynchronizer, plan_sync
+from trakt_manager.sync import NOTES_SKIPPED_WARNING, ListSynchronizer, plan_sync
 from trakt_manager.trakt_lists import TraktListsAPI, UserListSummary
 
 UCM_ENTRIES = [
@@ -187,12 +187,36 @@ def test_real_sync_without_session_fails(trakt_client) -> None:
         make_synchronizer(trakt_client, has_session=False).sync(make_definition())
 
 
-def test_ignored_notes_produce_a_single_warning(trakt_client, fake_trakt: FakeTrakt) -> None:
-    """Si Trakt no guarda las notas (cuenta no VIP) se avisa sin fallar."""
+def test_non_vip_account_skips_notes_with_a_single_warning(trakt_client, fake_trakt: FakeTrakt) -> None:
+    """Sin VIP la lista se crea sin notas, se avisa una vez y no se envía ninguna nota."""
     fake_trakt.notes_supported = False
     result = make_synchronizer(trakt_client).sync(make_definition())
     assert fake_trakt.item_keys(fake_trakt.list_named("Ruta UCM")) == EXPECTED_ORDER
-    assert len(result.warnings) == 1 and "VIP" in result.warnings[0]
+    assert result.warnings == [NOTES_SKIPPED_WARNING]
+    assert not result.plan.note_updates
+    assert all(item.notes is None for item in result.plan.to_add)
+
+
+def test_non_vip_account_second_sync_changes_nothing(trakt_client, fake_trakt: FakeTrakt) -> None:
+    """Regresión (prueba real): sin VIP, repetir la sincronización no propone actualizar notas."""
+    fake_trakt.notes_supported = False
+    synchronizer = make_synchronizer(trakt_client)
+    synchronizer.sync(make_definition())
+    fake_trakt.requests.clear()
+
+    preview = synchronizer.sync(make_definition(), dry_run=True)
+    assert not preview.plan.has_changes
+    assert preview.warnings == [NOTES_SKIPPED_WARNING], "el aviso también sale en la previsualización"
+    result = synchronizer.sync(make_definition())
+    assert not result.applied
+    assert fake_trakt.write_requests() == []
+
+
+def test_vip_account_keeps_notes(trakt_client, fake_trakt: FakeTrakt) -> None:
+    """Con VIP las notas se envían y no hay aviso."""
+    result = make_synchronizer(trakt_client).sync(make_definition())
+    assert result.warnings == []
+    assert any(item["notes"] for item in fake_trakt.list_named("Ruta UCM").items)
 
 
 # --- Consulta de listas -----------------------------------------------------------------------

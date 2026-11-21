@@ -38,6 +38,21 @@ El sistema SHALL añadir a la lista cada elemento resuelto exactamente una vez, 
 - **WHEN** cinco películas de la definición tienen la nota "1. Inicio del Multiverso | Película completa"
 - **THEN** la lista contiene las cinco películas distintas, cada una una sola vez
 
+### Requirement: Notas solo en cuentas que las admiten
+Trakt solo guarda notas en los elementos de una lista si la cuenta es VIP. El sistema SHALL comprobar si la cuenta las admite. Si no las admite, MUST NOT enviar notas ni proponer cambios de notas, y MUST avisar una sola vez de que se omiten, también en la previsualización.
+
+#### Scenario: Cuenta sin VIP
+- **WHEN** se sincroniza una definición con notas usando una cuenta que no es VIP
+- **THEN** la lista se crea sin notas, el resultado incluye un único aviso de que las notas se omiten y no se propone ningún cambio de notas
+
+#### Scenario: Repetir con cuenta sin VIP
+- **WHEN** se sincroniza dos veces la misma definición con una cuenta que no es VIP
+- **THEN** la segunda vez no hay ningún cambio ni ninguna escritura en Trakt
+
+#### Scenario: Cuenta VIP
+- **WHEN** la cuenta es VIP
+- **THEN** cada elemento se añade con su nota y los cambios de nota se aplican
+
 ### Requirement: Orden de la lista
 La lista resultante en Trakt SHALL tener sus elementos en el orden de la definición (intercalando películas y episodios) y MUST configurarse para ordenarse por posición manual ascendente.
 

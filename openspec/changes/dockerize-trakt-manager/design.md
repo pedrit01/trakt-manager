@@ -119,7 +119,7 @@ pytest con `httpx.MockTransport` para simular Trakt (búsqueda, episodios, lista
 
 ## Risks / Trade-offs
 
-- [Las notas por elemento de lista pueden ser una función solo VIP en Trakt y no guardarse en cuentas gratuitas] → El sync no falla si Trakt ignora la nota. Si la nota guardada no coincide, no se reintenta en bucle: se avisa una vez en el informe.
+- [Las notas por elemento de lista son solo para cuentas VIP: confirmado en la prueba real, donde Trakt acepta el lote pero descarta las notas] → Se consulta `/users/settings` (`vip` o `vip_ep`). Sin VIP no se envían ni se comparan las notas, y se avisa una vez. Así la sincronización sigue siendo idempotente. Con VIP, si aun así una nota no se guarda, se avisa una vez y no se reintenta en bucle.
 - [Si se renombra la lista en Trakt a mano, el siguiente sync crea otra] → Se documenta. Se admite `trakt_list_id` opcional en la definición para fijar la lista.
 - [La búsqueda por texto puede elegir un título equivocado (p. ej. "X-Men" o "Loki")] → El informe muestra título, año e id de cada resolución para revisarla en el dry-run, y la definición admite `ids` explícitos. En la migración se fijan ids para los títulos ambiguos.
 - [Un token en un volumen accesible] → El fichero tiene permisos 600 y pertenece al usuario `app`. No se expone por la API ni en los registros.

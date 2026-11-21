@@ -65,6 +65,16 @@ class TraktListsAPI:
         lists = self._client.request_json("GET", LISTS_PATH, authenticated=True) or []
         return [_summary_from_json(data) for data in lists]
 
+    def account_supports_list_notes(self) -> bool:
+        """Indica si la cuenta puede guardar notas en los elementos de sus listas.
+
+        Trakt solo las guarda en cuentas VIP. Con otras cuentas acepta el lote sin
+        error, pero descarta las notas en silencio, así que hay que preguntarlo antes.
+        """
+        settings = self._client.request_json("GET", "/users/settings", authenticated=True) or {}
+        user = settings.get("user", {})
+        return bool(user.get("vip") or user.get("vip_ep"))
+
     def get_list(self, list_id: int | str) -> UserListSummary:
         """Devuelve una lista por su id numérico o su slug.
 

@@ -14,7 +14,7 @@
 
 ## 3. Verificación real
 
-- [ ] 3.1 Reconstruir el contenedor local y, con una aplicación real de Trakt sin secreto, comprobar desde la GUI que el device flow funciona (o, si Trakt lo rechaza, que el error lo explica); verificar con `pytest` completo y `openspec validate optional-trakt-client-secret --strict`
+- [x] 3.1 Reconstruir el contenedor local y, con una aplicación real de Trakt sin secreto, comprobar desde la GUI que el device flow funciona (o, si Trakt lo rechaza, que el error lo explica); verificar con `pytest` completo y `openspec validate optional-trakt-client-secret --strict`
 
 ## Workflow follow-up
 

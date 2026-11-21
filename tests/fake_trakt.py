@@ -37,7 +37,8 @@ class FakeTrakt:
 
     Atributos:
         requests: Todas las peticiones recibidas, en orden, como ``(método, ruta)``.
-        notes_supported: Si es ``False`` se ignoran las notas, como en una cuenta no VIP.
+        notes_supported: Si es ``False`` la cuenta no es VIP: ``/users/settings`` lo indica
+            y las notas se descartan al añadir elementos, como hace Trakt.
         username: Usuario de la sesión simulada.
     """
 
@@ -197,7 +198,8 @@ class FakeTrakt:
         return httpx.Response(200, json=self.episodes[key])
 
     def _user_settings(self, request: httpx.Request, body: Any) -> httpx.Response:
-        return httpx.Response(200, json={"user": {"username": self.username}})
+        # Trakt solo guarda notas de lista en cuentas VIP: se simula con notes_supported.
+        return httpx.Response(200, json={"user": {"username": self.username, "vip": self.notes_supported, "vip_ep": False}})
 
     # --- Listas -------------------------------------------------------------------------------
 
