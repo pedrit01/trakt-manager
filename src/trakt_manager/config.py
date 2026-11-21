@@ -22,6 +22,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from trakt_manager.errors import ConfigError
 
 TOKEN_FILE_NAME = "token.json"
+SAVED_LISTS_DIR_NAME = "lists"
 
 
 class Settings(BaseSettings):
@@ -42,6 +43,11 @@ class Settings(BaseSettings):
     def token_path(self) -> Path:
         """Ruta del fichero donde se guarda el token OAuth de Trakt."""
         return self.data_dir / TOKEN_FILE_NAME
+
+    @property
+    def saved_lists_dir(self) -> Path:
+        """Directorio escribible donde la GUI guarda definiciones (``DATA_DIR/lists``)."""
+        return self.data_dir / SAVED_LISTS_DIR_NAME
 
     def require_client_id(self) -> str:
         """Devuelve el Client ID de Trakt.

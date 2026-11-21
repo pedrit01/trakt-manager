@@ -29,6 +29,10 @@ trakt-manager = "trakt_manager.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Ficheros estáticos de la GUI web, servidos por la propia API.
+[tool.setuptools.package-data]
+trakt_manager = ["web/*", "web/**/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # Aviso interno de Starlette sobre su TestClient; no afecta al código de la aplicación.

@@ -1,7 +1,11 @@
-# Levanta la API de trakt-manager y permite ejecutar el CLI con la misma imagen.
+# Levanta la API y la GUI web de trakt-manager y permite ejecutar el CLI con la misma imagen.
 #
-#   cp .env.example .env       # y rellena tus credenciales
-#   docker compose up -d       # API en http://127.0.0.1:8000 (ver API_BIND / API_PORT)
+#   docker compose up -d       # GUI y API en http://127.0.0.1:8000 (ver API_BIND / API_PORT)
+#
+# El .env es opcional: sin él, la GUI muestra un asistente para configurar las
+# credenciales de Trakt y la API_KEY (el código de configuración sale en
+# `docker compose logs`). Con .env, sus valores tienen prioridad sobre los de la GUI.
+#
 #   docker compose run --rm trakt-manager auth login
 #   docker compose run --rm trakt-manager sync lists/doomsday.yaml --dry-run
 #   docker compose run --rm tests   # tests (perfil dev)

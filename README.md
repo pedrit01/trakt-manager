@@ -1,54 +1,60 @@
 # trakt-manager
 
-Crea y mantiene listas de [Trakt](https://trakt.tv) a partir de ficheros de definición en YAML o JSON. Se puede usar desde la línea de comandos o, a distancia, con una API HTTP. Todo se ejecuta en Docker.
+Crea y mantiene listas de [Trakt](https://trakt.tv) a partir de definiciones en YAML o JSON. Se usa desde una **interfaz web**, una API HTTP o la línea de comandos, y todo funciona dentro de Docker.
 
 Cada definición describe la lista tal como debe quedar: películas, series, temporadas o episodios concretos, en orden. La sincronización es **idempotente**: crea la lista si no existe y, si existe, solo añade lo que falta, quita lo que sobra y reordena. Repetirla sin cambios no toca nada.
 
 Ejemplo incluido: [`lists/doomsday.yaml`](lists/doomsday.yaml), la ruta cronológica hacia *Vengadores: Doomsday* (películas completas y solo los episodios imprescindibles de cada serie).
 
-## Puesta en marcha con Docker
+## Uso sin comandos (Docker Desktop u OrbStack)
 
-1. **Crea una aplicación en Trakt** en <https://trakt.tv/oauth/applications> → *New Application*. Ponle cualquier nombre y en *Redirect URI* escribe `urn:ietf:wg:oauth:2.0:oob`. Copia el *Client ID* y el *Client Secret*.
+No hace falta clonar el repositorio ni abrir una terminal.
 
-2. **Configura el entorno:**
+1. **Descarga y arranca la imagen.** En Docker Desktop, busca `ghcr.io/pedrit01/trakt-manager` y pulsa *Run*. En las opciones, publica el puerto **8000** del contenedor (*Host port* `8000`) y, para no perder datos al borrar el contenedor, añade un volumen con *Container path* `/data`. En OrbStack, haz lo mismo desde *Containers → New*.
+2. **Abre <http://localhost:8000/>.** Como aún no está configurado, aparece el asistente.
+3. **Copia el código de configuración.** Está en los registros del contenedor (*Containers → trakt-manager → Logs*), en la línea «usa este código de configuración: XXXX-XXXX». Así solo quien controla el contenedor puede configurarlo.
+4. **Crea una aplicación en Trakt** en <https://trakt.tv/oauth/applications> → *New Application*. Ponle cualquier nombre y en *Redirect URI* escribe `urn:ietf:wg:oauth:2.0:oob`. Copia el *Client ID* y el *Client Secret* en el asistente.
+5. **Guarda la clave de API** que aparece al terminar (por ejemplo, en tu gestor de contraseñas). No se vuelve a mostrar, y la necesitarás para entrar desde otro navegador o para usar la API.
 
-   ```bash
-   cp .env.example .env
-   # Edita .env: TRAKT_CLIENT_ID, TRAKT_CLIENT_SECRET y API_KEY.
-   # Para generar una API_KEY:
-   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
-   ```
+La configuración, el token de Trakt y las definiciones que guardes desde la interfaz viven en `/data`, así que se conservan al recrear o actualizar el contenedor si mantienes el mismo volumen.
 
-3. **Levanta el servicio:**
+## La interfaz web
 
-   ```bash
-   docker compose up -d --build
-   docker compose ps          # el servicio debe aparecer como "healthy"
-   ```
+- **Trakt**: pulsa «Conectar con Trakt», abre la URL que aparece (en cualquier dispositivo), introduce el código y confirma en trakt.tv. La página detecta la confirmación sola. «Desconectar» cierra la sesión.
+- **Definiciones**: lista las incluidas en la imagen y las tuyas. Puedes pegar o subir un `.yaml`/`.json`, validarlo sin tocar Trakt, guardarlo, descargarlo y borrarlo (solo las tuyas). Si guardas una con el mismo nombre que una incluida, la tuya la sustituye.
+- **Previsualizar / sincronizar**: muestra qué ha encontrado Trakt para cada entrada (título, año e id) y qué no. Antes de sincronizar de verdad, enseña los cambios y pide confirmación. Si sincronizas sin «incluir extras», los extras añadidos en una sincronización anterior se quitan, porque la lista refleja la definición con las opciones elegidas.
+- **Mis listas**: tus listas de Trakt y sus elementos en orden.
+- **Ajustes**: muestra de dónde sale cada clave, permite cambiar las credenciales de Trakt (cambiar el Client ID cierra la sesión, porque el token es de la aplicación anterior) y regenerar la clave de API (la anterior deja de valer al instante).
 
-4. **Inicia sesión en Trakt** (solo una vez: el token se guarda en el volumen `trakt-data` y se renueva solo):
+Al entrar, la clave se guarda solo para esa pestaña, salvo que marques «Recordarla en este navegador». «Salir» la olvida.
 
-   ```bash
-   docker compose run --rm trakt-manager auth login
-   # Abre la URL que aparece, introduce el código y espera la confirmación.
-   ```
+## Con docker compose (desde el código)
 
-5. **Crea la lista:**
+```bash
+docker compose up -d --build
+docker compose ps          # el servicio debe aparecer como "healthy"
+```
 
-   ```bash
-   # Primero previsualiza: no modifica tu cuenta.
-   docker compose run --rm trakt-manager sync lists/doomsday.yaml --dry-run
-   # Después, sincroniza de verdad.
-   docker compose run --rm trakt-manager sync lists/doomsday.yaml
-   ```
+Después abre <http://127.0.0.1:8000/> y sigue el asistente (el código sale en `docker compose logs`).
+
+También puedes configurarlo por variables de entorno en lugar de con el asistente: `cp .env.example .env` y rellena `TRAKT_CLIENT_ID`, `TRAKT_CLIENT_SECRET` y `API_KEY`. Lo que venga del entorno **tiene prioridad** y la interfaz lo muestra como no editable.
+
+Con compose también puedes usar el CLI, que comparte la configuración con la interfaz web:
+
+```bash
+docker compose run --rm trakt-manager auth login
+docker compose run --rm trakt-manager sync lists/doomsday.yaml --dry-run
+docker compose run --rm trakt-manager sync lists/doomsday.yaml
+```
 
 Las definiciones de `lists/` se montan en el contenedor, así que se pueden editar sin reconstruir la imagen.
 
 ### Acceso desde otros equipos
 
-Por defecto la API solo se publica en este equipo (`127.0.0.1:8000`), porque escribe en tu cuenta de Trakt. Para acceder desde otros equipos:
+La interfaz y la API escriben en tu cuenta de Trakt, así que conviene saber quién llega a ellas:
 
-- **Red local:** pon `API_BIND=0.0.0.0` en `.env` y ejecuta `docker compose up -d`. Usa una `API_KEY` larga y aleatoria.
+- **Con compose**, por defecto solo se publican en este equipo (`127.0.0.1:8000`). Para la red local, pon `API_BIND=0.0.0.0` en `.env` y ejecuta `docker compose up -d`.
+- **Con Docker Desktop**, un puerto publicado es accesible **desde toda la red** por defecto. Completa el asistente nada más arrancar: hasta entonces solo te protege el código de configuración, y después la clave de API.
 - **Internet:** no publiques el puerto directamente. Ponlo detrás de un proxy inverso con TLS (Caddy, Traefik, nginx…).
 
 ## Comandos del CLI
@@ -72,16 +78,20 @@ Dentro de Docker, antepón `docker compose run --rm trakt-manager` a cada comand
 
 ## API HTTP
 
-Todas las rutas, salvo `/health`, necesitan la cabecera `X-API-Key: <API_KEY>`. La documentación interactiva está en <http://127.0.0.1:8000/docs>.
+Todas las rutas, salvo `/health`, la interfaz web y el asistente, necesitan la cabecera `X-API-Key: <API_KEY>`. Mientras el servicio no está configurado, el resto de rutas responden `503`. La documentación interactiva está en <http://127.0.0.1:8000/docs>.
 
 | Método y ruta | Qué hace |
 | --- | --- |
-| `GET /health` | Estado del servicio y si hay sesión de Trakt (sin clave). |
+| `GET /health` | Estado del servicio, modo (`ready` o `setup`) y si hay sesión de Trakt (sin clave). |
+| `GET /setup/status`, `POST /setup` | Asistente inicial (sin clave; `POST` exige el código de configuración y devuelve la clave generada una vez). |
+| `GET /settings`, `PUT /settings`, `POST /settings/api-key` | Ver el origen de cada clave, cambiar las credenciales de Trakt y regenerar la clave de API. |
 | `POST /auth/device` | Inicia el login: devuelve `verification_url` y `user_code`. |
 | `GET /auth/status` | `authorized` (con usuario), `pending`, `expired`, `error` o `none`. |
 | `DELETE /auth` | Cierra la sesión. |
-| `GET /definitions` | Definiciones de `lists/` con su validez y número de entradas. |
+| `GET /definitions` | Definiciones incluidas y guardadas, con su origen, validez y número de entradas. |
 | `GET /definitions/{nombre}` | Una definición (`doomsday` para `lists/doomsday.yaml`). |
+| `GET /definitions/{nombre}/source` | El fichero original, para descargarlo con sus comentarios. |
+| `PUT /definitions/{nombre}`, `DELETE /definitions/{nombre}` | Guardar (cuerpo YAML o JSON, se valida antes) o borrar una definición guardada. |
 | `POST /validate` | Valida una definición enviada en el cuerpo (422 si tiene errores). |
 | `POST /definitions/{nombre}/sync?dry_run=true&include_extras=false` | Sincroniza o previsualiza una definición de `lists/`. |
 | `POST /sync?dry_run=true` | Igual, con la definición en el cuerpo. |
@@ -138,3 +148,23 @@ docker compose run --rm tests -k shared_notes             # tests que contengan 
 ```
 
 Los tests usan un Trakt simulado (`tests/fake_trakt.py`) y nunca llaman a la API real. El código fuente está en `src/trakt_manager/`. Cada módulo explica su función en su docstring.
+
+### Interfaz web
+
+La interfaz está en `src/trakt_manager/web/`: HTML, CSS y módulos JavaScript estándar, sin dependencias ni paso de compilación. La sirve la propia API en `/`. Para probarla sin credenciales de Trakt hay un servidor de demostración conectado al Trakt simulado:
+
+```bash
+docker compose run --rm -p 8080:8080 --entrypoint python tests tests/demo_server.py
+# http://localhost:8080/ · código de configuración: AB12-CD34 · cualquier Client ID/Secret vale
+```
+
+En la demostración, el login con Trakt se confirma solo a los 6 segundos.
+
+### Publicar la imagen
+
+El flujo `.github/workflows/publish-image.yml` ejecuta los tests y, si pasan, publica `ghcr.io/pedrit01/trakt-manager` para `linux/amd64` y `linux/arm64`:
+
+- con cada push a `main`: etiquetas `latest` y `sha-<commit>`;
+- con cada etiqueta `vX.Y.Z`: etiquetas `X.Y.Z` y `X.Y`.
+
+En las pull requests solo se ejecutan los tests. La primera vez que se publique hay que hacer público el paquete para que se pueda descargar sin iniciar sesión: en GitHub, *Packages → trakt-manager → Package settings → Change visibility → Public*.

@@ -12,8 +12,6 @@ Piezas del módulo:
 - :class:`BackgroundDeviceAuthorization`: ejecuta el device flow en un hilo (API).
 """
 
-import json
-import os
 import threading
 import time
 from collections.abc import Callable
@@ -29,6 +27,7 @@ from trakt_manager.errors import (
     TraktAPIError,
     TraktManagerError,
 )
+from trakt_manager.private_files import read_json_object, write_private_json
 from trakt_manager.trakt_client import TraktClient
 
 # Margen con el que se considera caducado un token: se renueva un poco antes de
@@ -81,27 +80,12 @@ class TokenStore:
             El token como diccionario, o ``None`` si no hay fichero o no tiene
             ``access_token`` (un fichero corrupto se trata como si no hubiera sesión).
         """
-        if not self.exists():
-            return None
-        try:
-            token = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return None
-        return token if isinstance(token, dict) and token.get("access_token") else None
+        token = read_json_object(self.path)
+        return token if token is not None and token.get("access_token") else None
 
     def save(self, token: dict[str, Any]) -> None:
-        """Guarda el token de forma atómica y con permisos ``600``.
-
-        Se escribe primero en un fichero temporal y luego se renombra, para que un
-        corte a mitad de la escritura no deje un token corrupto.
-        """
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary_path = self.path.with_suffix(".tmp")
-        file_descriptor = os.open(temporary_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(file_descriptor, "w", encoding="utf-8") as token_file:
-            json.dump(token, token_file, indent=2)
-        os.chmod(temporary_path, 0o600)
-        os.replace(temporary_path, self.path)
+        """Guarda el token de forma atómica y con permisos ``600``."""
+        write_private_json(self.path, token)
 
     def delete(self) -> bool:
         """Borra el token guardado.

@@ -83,3 +83,47 @@ class DefinitionError(TraktManagerError):
         self.issues = issues
         summary = "; ".join(issue.describe() for issue in issues)
         super().__init__(f"La definición no es válida: {summary}")
+
+
+class ListBusyError(TraktManagerError):
+    """Ya hay una sincronización real en curso para la misma lista."""
+
+
+class NotConfiguredError(TraktManagerError):
+    """El servicio está en modo configuración: faltan credenciales o la ``API_KEY``.
+
+    Atributos:
+        missing_variables: Variables que faltan (por ejemplo ``["API_KEY"]``).
+    """
+
+    def __init__(self, missing_variables: list[str]) -> None:
+        self.missing_variables = missing_variables
+        super().__init__(
+            "trakt-manager no está configurado. Falta: "
+            + ", ".join(missing_variables)
+            + ". Complétalo desde el asistente de la interfaz web."
+        )
+
+
+class AlreadyConfiguredError(TraktManagerError):
+    """Se intentó repetir la configuración inicial cuando ya estaba hecha."""
+
+
+class InvalidSetupCodeError(TraktManagerError):
+    """El código de configuración enviado no es el vigente."""
+
+
+class SettingFromEnvironmentError(TraktManagerError):
+    """Se intentó cambiar desde la GUI una clave que viene de una variable de entorno."""
+
+
+class DefinitionNotFoundError(TraktManagerError):
+    """No hay ninguna definición con ese nombre en el catálogo."""
+
+
+class InvalidDefinitionNameError(TraktManagerError):
+    """El nombre de una definición no es válido (solo minúsculas, números y guiones)."""
+
+
+class DefinitionNotDeletableError(TraktManagerError):
+    """Se intentó borrar una definición incluida en la imagen o montada (solo lectura)."""

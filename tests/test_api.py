@@ -10,10 +10,9 @@ import yaml
 from fastapi.testclient import TestClient
 from typer.testing import CliRunner
 
-from conftest import make_context
+from conftest import make_runtime
 from trakt_manager.api import create_app
 from trakt_manager.cli import app as cli_app
-from trakt_manager.errors import ConfigError
 
 API_KEY = "clave-de-prueba"
 HEADERS = {"X-API-Key": API_KEY}
@@ -36,10 +35,13 @@ def lists_dir(tmp_path: Path) -> Path:
     return directory
 
 
+CREDENTIALS = {"trakt_client_id": "client-id", "trakt_client_secret": "secret"}
+
+
 def make_api(tmp_path: Path, fake_trakt, lists_dir: Path, **options) -> TestClient:
-    """Cliente HTTP de pruebas para la API conectada al Trakt simulado."""
-    context = make_context(tmp_path / "data", fake_trakt, api_key=API_KEY, lists_dir=lists_dir, **options)
-    return TestClient(create_app(context))
+    """Cliente HTTP de pruebas para la API, configurada y conectada al Trakt simulado."""
+    runtime = make_runtime(tmp_path / "data", fake_trakt, api_key=API_KEY, lists_dir=lists_dir, **CREDENTIALS, **options)
+    return TestClient(create_app(runtime))
 
 
 # --- seguridad y salud ------------------------------------------------------------------------
@@ -53,17 +55,11 @@ def test_requests_without_valid_key_are_rejected(tmp_path, fake_trakt, lists_dir
     assert fake_trakt.requests == []
 
 
-def test_app_refuses_to_start_without_api_key(tmp_path, fake_trakt) -> None:
-    """Sin API_KEY no se puede crear la aplicación y el error nombra la variable."""
-    with pytest.raises(ConfigError, match="API_KEY"):
-        create_app(make_context(tmp_path, fake_trakt, api_key=None))
-
-
 def test_health_needs_no_key_and_reveals_no_secrets(tmp_path, fake_trakt, lists_dir) -> None:
     """/health responde sin clave e indica si hay sesión, sin incluir tokens."""
     response = make_api(tmp_path, fake_trakt, lists_dir).get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "trakt_session": True}
+    assert response.json() == {"status": "ok", "mode": "ready", "trakt_session": True}
 
 
 # --- autenticación remota ---------------------------------------------------------------------
@@ -85,6 +81,18 @@ def test_device_flow_through_the_api(tmp_path, fake_trakt, lists_dir) -> None:
     assert api.get("/auth/status", headers=HEADERS).json() == {"status": "authorized", "username": "pedro", "error": None}
 
 
+def test_status_after_logout_is_none(tmp_path, fake_trakt, lists_dir) -> None:
+    """Regresión: tras conectar con el device flow y cerrar sesión, el estado es 'none'."""
+    api = make_api(tmp_path, fake_trakt, lists_dir, logged_in=False, sleep=lambda seconds: time.sleep(0.01))
+    fake_trakt.device_authorized = True
+    api.post("/auth/device", headers=HEADERS)
+    deadline = time.time() + 5
+    while api.get("/auth/status", headers=HEADERS).json()["status"] != "authorized" and time.time() < deadline:
+        time.sleep(0.02)
+    api.delete("/auth", headers=HEADERS)
+    assert api.get("/auth/status", headers=HEADERS).json() == {"status": "none", "username": None, "error": None}
+
+
 def test_logout_through_the_api(tmp_path, fake_trakt, lists_dir) -> None:
     """DELETE /auth cierra la sesión."""
     api = make_api(tmp_path, fake_trakt, lists_dir)
@@ -100,6 +108,7 @@ def test_lists_available_definitions(tmp_path, fake_trakt, lists_dir) -> None:
     definitions = make_api(tmp_path, fake_trakt, lists_dir).get("/definitions", headers=HEADERS).json()
     by_name = {definition["name"]: definition for definition in definitions}
     assert (by_name["ucm"]["valid"], by_name["ucm"]["list_name"], by_name["ucm"]["entries"]) == (True, "Ruta UCM", 2)
+    assert by_name["ucm"]["origin"] == "bundled"
     assert by_name["rota"]["valid"] is False
 
 
@@ -195,7 +204,7 @@ def test_lists_and_list_items(tmp_path, fake_trakt, lists_dir) -> None:
 
 def test_api_response_matches_cli_json(tmp_path, fake_trakt, lists_dir) -> None:
     """La previsualización por la API devuelve lo mismo que 'sync --dry-run --json' del CLI."""
-    context = make_context(tmp_path / "data", fake_trakt, api_key=API_KEY, lists_dir=lists_dir)
-    api_result = TestClient(create_app(context)).post("/definitions/ucm/sync?dry_run=true", headers=HEADERS).json()
-    cli_result = CliRunner().invoke(cli_app, ["sync", str(lists_dir / "ucm.yaml"), "--dry-run", "--json"], obj=context)
+    runtime = make_runtime(tmp_path / "data", fake_trakt, api_key=API_KEY, lists_dir=lists_dir, **CREDENTIALS)
+    api_result = TestClient(create_app(runtime)).post("/definitions/ucm/sync?dry_run=true", headers=HEADERS).json()
+    cli_result = CliRunner().invoke(cli_app, ["sync", str(lists_dir / "ucm.yaml"), "--dry-run", "--json"], obj=runtime.current())
     assert json.loads(cli_result.stdout) == api_result

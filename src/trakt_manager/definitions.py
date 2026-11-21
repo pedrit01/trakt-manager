@@ -318,11 +318,13 @@ def _issue_from_pydantic(detail: ErrorDetails) -> DefinitionIssue:
 def _spanish_message(detail: ErrorDetails) -> str:
     """Traduce los errores más habituales de pydantic al español."""
     context = detail.get("ctx") or {}
+    # pydantic une los valores permitidos con " or " ("'a', 'b' or 'c'"): se traduce.
+    expected = str(context.get("expected", "")).replace(" or ", " o ")
     messages = {
         "missing": "campo obligatorio",
         "extra_forbidden": "campo no reconocido",
-        "literal_error": f"valor no válido; valores permitidos: {context.get('expected', '')}",
-        "enum": f"valor no válido; valores permitidos: {context.get('expected', '')}",
+        "literal_error": f"valor no válido; valores permitidos: {expected}",
+        "enum": f"valor no válido; valores permitidos: {expected}",
         "int_type": "debe ser un número entero",
         "int_parsing": "debe ser un número entero",
         "int_from_float": "debe ser un número entero",

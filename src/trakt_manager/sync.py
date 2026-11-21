@@ -12,13 +12,15 @@ Se hace en dos pasos, para poder previsualizar sin tocar la cuenta:
    previsualización, lo aplica.
 """
 
-from collections.abc import Callable
+import threading
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 from trakt_manager.definitions import ListDefinition
-from trakt_manager.errors import NotAuthenticatedError, TraktAPIError
+from trakt_manager.errors import ListBusyError, NotAuthenticatedError, TraktAPIError
 from trakt_manager.items import DesiredItem, ExistingItem, ItemKey
 from trakt_manager.resolver import EntryResolver, ResolutionReport
 from trakt_manager.trakt_lists import TraktListsAPI, UserListSummary
@@ -316,6 +318,33 @@ class ListSynchronizer:
                 f"Trakt no guardó la nota de {len(ignored_notes)} elementos; las notas pueden requerir cuenta VIP."
             )
         return warnings
+
+
+class SyncLocks:
+    """Bloqueos por nombre de lista para impedir dos sincronizaciones reales simultáneas.
+
+    Basta con bloqueos en memoria porque la API se ejecuta en un único proceso.
+    """
+
+    def __init__(self) -> None:
+        self._locks: dict[str, threading.Lock] = {}
+        self._guard = threading.Lock()
+
+    @contextmanager
+    def hold(self, list_name: str) -> Iterator[None]:
+        """Reserva la lista durante el bloque ``with``.
+
+        Raises:
+            ListBusyError: Si la lista ya está reservada; no se espera a que se libere.
+        """
+        with self._guard:
+            lock = self._locks.setdefault(list_name, threading.Lock())
+        if not lock.acquire(blocking=False):
+            raise ListBusyError(f"Ya hay una sincronización en curso de la lista '{list_name}'.")
+        try:
+            yield
+        finally:
+            lock.release()
 
 
 def _without_duplicates(items: list[DesiredItem]) -> tuple[list[DesiredItem], list[str]]:

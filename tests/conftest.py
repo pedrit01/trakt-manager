@@ -51,3 +51,24 @@ def make_context(tmp_path, fake: FakeTrakt, *, logged_in: bool = True, sleep=lam
     if logged_in:
         context.token_store.save({"access_token": "test-token", "refresh_token": "r", "created_at": 9_999_999_999, "expires_in": 7_776_000})
     return context
+
+
+def make_runtime(tmp_path, fake: FakeTrakt, *, logged_in: bool = True, sleep=lambda seconds: None, setup_code: str = "AB12-CD34", **settings):
+    """Crea un AppRuntime conectado al Trakt simulado.
+
+    Los valores de ``settings`` cuentan como "del entorno". Sin ``api_key`` (o sin
+    credenciales) el runtime arranca en modo configuración con ``setup_code``.
+    """
+    from trakt_manager.app_context import AppContext, AppRuntime
+    from trakt_manager.config import Settings
+    from trakt_manager.setup_guard import SetupGuard
+
+    def factory(effective_settings: Settings) -> AppContext:
+        return AppContext(effective_settings, transport=fake.transport(), base_url=FAKE_BASE_URL, sleep=sleep)
+
+    values = {"data_dir": tmp_path, "request_delay": 0}
+    values.update(settings)
+    runtime = AppRuntime(Settings(_env_file=None, **values), context_factory=factory, setup_guard=SetupGuard(lambda: setup_code))
+    if logged_in:
+        runtime.current().token_store.save({"access_token": "test-token", "refresh_token": "r", "created_at": 9_999_999_999, "expires_in": 7_776_000})
+    return runtime

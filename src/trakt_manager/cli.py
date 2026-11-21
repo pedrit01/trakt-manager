@@ -7,7 +7,7 @@ Comandos:
 - ``sync <fichero> [--dry-run] [--include-extras]``: crea o actualiza la lista.
 - ``lists``: listas del usuario.
 - ``show <lista>``: elementos de una lista en orden.
-- ``serve``: arranca la API HTTP.
+- ``serve``: arranca la API HTTP y la GUI web.
 
 ``validate``, ``sync``, ``lists`` y ``show`` aceptan ``--json`` para emitir el
 mismo resultado que devuelve la API. El código de salida es 0 si todo fue bien
@@ -22,7 +22,7 @@ from typing import Annotated, Any, TypeVar
 import typer
 from pydantic import BaseModel
 
-from trakt_manager.app_context import AppContext
+from trakt_manager.app_context import AppContext, AppRuntime
 from trakt_manager.config import Settings
 from trakt_manager.definitions import ValidationOutcome, load_definition_file
 from trakt_manager.errors import DefinitionError, TraktManagerError
@@ -44,10 +44,14 @@ DefinitionArgument = Annotated[Path, typer.Argument(help="Fichero de definición
 
 @app.callback()
 def configure(ctx: typer.Context) -> None:
-    """Prepara el contexto de la aplicación a partir de la configuración del entorno."""
+    """Prepara el contexto de la aplicación con la configuración efectiva.
+
+    La configuración efectiva combina el entorno con lo guardado desde la GUI, de
+    modo que el CLI dentro del contenedor usa las mismas credenciales que la web.
+    """
     # Los tests inyectan su propio contexto (con un Trakt simulado) mediante ``obj``.
     if ctx.obj is None:
-        ctx.obj = AppContext(Settings())
+        ctx.obj = AppRuntime(Settings()).current()
 
 
 # --- auth ------------------------------------------------------------------------------------
@@ -87,7 +91,7 @@ def auth_status(ctx: typer.Context) -> None:
 def auth_logout(ctx: typer.Context) -> None:
     """Cierra la sesión: revoca el token en Trakt y lo borra."""
     context: AppContext = ctx.obj
-    closed = _run_or_exit(lambda: context.token_manager.logout())
+    closed = _run_or_exit(context.logout)
     typer.echo("Sesión cerrada." if closed else "No había ninguna sesión abierta.")
 
 
@@ -184,20 +188,26 @@ def show(
 
 @app.command("serve")
 def serve(
-    ctx: typer.Context,
     host: Annotated[str | None, typer.Option(help="Dirección en la que escuchar (por defecto API_HOST).")] = None,
     port: Annotated[int | None, typer.Option(help="Puerto en el que escuchar (por defecto API_PORT).")] = None,
 ) -> None:
-    """Arranca la API HTTP (exige API_KEY)."""
+    """Arranca la API y la GUI web (en modo configuración si falta la configuración)."""
     # Importaciones locales: uvicorn y la API solo hacen falta para este comando.
+    import logging
+
     import uvicorn
 
     from trakt_manager.api import create_app
 
-    context: AppContext = ctx.obj
-    api = _run_or_exit(lambda: create_app(context))
+    # Sin esto los mensajes de la aplicación (como el código de configuración) no
+    # aparecerían con formato en los registros del contenedor.
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    # El runtime se crea desde el entorno (no desde ctx.obj) para distinguir lo que
+    # viene del entorno de lo guardado desde la GUI.
+    runtime = AppRuntime(Settings())
+    settings = runtime.current().settings
     # Un solo worker: los bloqueos de sincronización y el device flow viven en este proceso.
-    uvicorn.run(api, host=host or context.settings.api_host, port=port or context.settings.api_port, workers=1)
+    uvicorn.run(create_app(runtime), host=host or settings.api_host, port=port or settings.api_port, workers=1)
 
 
 # --- utilidades ------------------------------------------------------------------------------
