@@ -1,0 +1,46 @@
+# Levanta la API de trakt-manager y permite ejecutar el CLI con la misma imagen.
+#
+#   cp .env.example .env       # y rellena tus credenciales
+#   docker compose up -d       # API en http://127.0.0.1:8000 (ver API_BIND / API_PORT)
+#   docker compose run --rm trakt-manager auth login
+#   docker compose run --rm trakt-manager sync lists/doomsday.yaml --dry-run
+#   docker compose run --rm tests   # tests (perfil dev)
+
+services:
+  trakt-manager:
+    build:
+      context: .
+      target: runtime
+    image: trakt-manager:latest
+    env_file:
+      - path: .env
+        required: false
+    # Valores internos del contenedor: tienen prioridad sobre .env para que, por
+    # ejemplo, cambiar API_PORT solo cambie el puerto publicado en el anfitrión.
+    environment:
+      DATA_DIR: /data
+      LISTS_DIR: /app/lists
+      API_HOST: 0.0.0.0
+      API_PORT: "8000"
+    # Por defecto solo se publica en este equipo (127.0.0.1). Para acceder desde
+    # otros equipos pon API_BIND=0.0.0.0 en .env o usa un proxy inverso con TLS.
+    ports:
+      - "${API_BIND:-127.0.0.1}:${API_PORT:-8000}:8000"
+    volumes:
+      - trakt-data:/data # token de Trakt, persiste entre reinicios
+      - ./lists:/app/lists:ro # definiciones editables desde el anfitrión
+    restart: unless-stopped
+
+  tests:
+    profiles: ["dev"]
+    build:
+      context: .
+      target: dev
+    # Se monta el código para probar los cambios sin reconstruir la imagen.
+    volumes:
+      - ./src:/src/src
+      - ./tests:/src/tests
+      - ./lists:/src/lists
+
+volumes:
+  trakt-data:

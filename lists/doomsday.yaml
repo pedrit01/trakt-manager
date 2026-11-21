@@ -1,0 +1,164 @@
+# Ruta cronológica hacia Vengadores: Doomsday (migrada desde create-tracklist.py).
+#
+# Películas completas y solo los episodios imprescindibles de cada serie, en orden.
+# Las entradas con 'extra: true' solo se añaden con --include-extras.
+# Los títulos ambiguos en la búsqueda llevan 'ids' para fijar el resultado correcto.
+
+name: "Ruta Cronológica hacia Vengadores: Doomsday"
+description: "Orden cronológico UCM sin relleno (películas + episodios exactos) rumbo a Avengers: Doomsday."
+privacy: private
+display_numbers: true
+allow_comments: false
+
+entries:
+  # --- 1. Inicio del Multiverso ---
+  - type: episodes
+    title: "Bruja Escarlata y Visión"
+    query: "WandaVision"
+    year: 2021
+    season: 1
+    episodes: [4, 7, 8, 9]
+    block: "1. Inicio del Multiverso"
+    note: "Ep. 4, 7, 8 y 9 (si vas justo: solo 8 y 9)"
+  - type: movie
+    title: "Shang-Chi y la leyenda de los Diez Anillos"
+    query: "Shang-Chi and the Legend of the Ten Rings"
+    year: 2021
+    block: "1. Inicio del Multiverso"
+    note: "Película completa"
+  - type: episodes
+    title: "Falcon y el Soldado de Invierno"
+    query: "The Falcon and the Winter Soldier"
+    year: 2021
+    season: 1
+    episodes: [1, 4, 5, 6]
+    block: "1. Inicio del Multiverso"
+    note: "Ep. 1, 4, 5 y 6"
+  - type: movie
+    title: "Spider-Man: No Way Home"
+    query: "Spider-Man: No Way Home"
+    year: 2021
+    block: "1. Inicio del Multiverso"
+    note: "Película completa"
+  - type: movie
+    title: "Doctor Strange en el Multiverso de la Locura"
+    query: "Doctor Strange in the Multiverse of Madness"
+    year: 2022
+    block: "1. Inicio del Multiverso"
+    note: "Película completa"
+  - type: movie
+    title: "Black Panther: Wakanda Forever"
+    query: "Black Panther: Wakanda Forever"
+    year: 2022
+    block: "1. Inicio del Multiverso"
+    note: "Película completa"
+  - type: episodes
+    title: "Ms. Marvel"
+    query: "Ms. Marvel"
+    year: 2022
+    season: 1
+    episodes: [1, 6]
+    block: "1. Inicio del Multiverso"
+    note: "Ep. 1 y 6 (si ves The Marvels)"
+  # --- 2. La grieta y la AVT ---
+  - type: movie
+    title: "Ant-Man y la Avispa: Quantumania"
+    query: "Ant-Man and the Wasp: Quantumania"
+    year: 2023
+    block: "2. La grieta y la AVT"
+    note: "Película completa"
+  - type: movie
+    title: "The Marvels"
+    query: "The Marvels"
+    year: 2023
+    ids: { tmdb: 609681 }
+    block: "2. La grieta y la AVT"
+    note: "Película completa (o acto final + postcréditos)"
+  - type: episodes
+    title: "Loki – Temporada 2"
+    query: "Loki"
+    year: 2021
+    ids: { tmdb: 84958 }
+    season: 2
+    episodes: [1, 4, 5, 6]
+    block: "2. La grieta y la AVT"
+    note: "T2: Ep. 1, 4, 5 y 6"
+  - type: movie
+    title: "Deadpool y Lobezno"
+    query: "Deadpool & Wolverine"
+    year: 2024
+    block: "2. La grieta y la AVT"
+    note: "Película completa"
+  - type: episodes
+    title: "Agatha, ¿quién si no?"
+    query: "Agatha All Along"
+    year: 2024
+    season: 1
+    episodes: [6, 8, 9]
+    block: "2. La grieta y la AVT"
+    note: "Ep. 6, 8 y 9"
+  # --- 3. Recta final hacia Doomsday ---
+  - type: movie
+    title: "Capitán América: Brave New World"
+    query: "Captain America: Brave New World"
+    year: 2025
+    block: "3. Recta final hacia Doomsday"
+    note: "Película completa"
+  - type: movie
+    title: "Thunderbolts*"
+    query: "Thunderbolts*"
+    year: 2025
+    block: "3. Recta final hacia Doomsday"
+    note: "Película completa"
+  - type: movie
+    title: "Los 4 Fantásticos: Primeros pasos"
+    query: "The Fantastic Four: First Steps"
+    year: 2025
+    block: "3. Recta final hacia Doomsday"
+    note: "Película completa"
+  - type: movie
+    title: "Spider-Man: Brand New Day"
+    query: "Spider-Man: Brand New Day"
+    year: 2026
+    block: "3. Recta final hacia Doomsday"
+    note: "Película completa"
+  - type: episodes
+    title: "VisionQuest"
+    query: "VisionQuest"
+    year: 2026
+    season: 1
+    episodes: [1, 2, 7, 8]
+    block: "3. Recta final hacia Doomsday"
+    note: "Ep. 1, 2, 7 y 8"
+  # --- 4. Extras antes del cine ---
+  - type: movie
+    title: "Vengadores: Endgame Encore (escenas nuevas)"
+    query: "Avengers: Endgame"
+    year: 2019
+    block: "4. Extras antes del cine"
+    note: "Solo final extendido + créditos (5-6 min). Ver al final."
+    extra: true
+  - type: movie
+    title: "X-Men (2000)"
+    query: "X-Men"
+    year: 2000
+    ids: { tmdb: 36657 }
+    block: "4. Extras antes del cine"
+    note: "Película completa (repaso clásico)"
+    extra: true
+  - type: movie
+    title: "X2 (2003)"
+    query: "X2"
+    year: 2003
+    ids: { tmdb: 36658 }
+    block: "4. Extras antes del cine"
+    note: "Película completa (repaso clásico)"
+    extra: true
+  - type: movie
+    title: "Viuda Negra"
+    query: "Black Widow"
+    year: 2021
+    ids: { tmdb: 497698 }
+    block: "4. Extras antes del cine"
+    note: "Solo si no la viste en su día"
+    extra: true

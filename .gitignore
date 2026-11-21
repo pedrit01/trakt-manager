@@ -1,0 +1,14 @@
+# Secretos y datos locales: nunca deben llegar al repositorio.
+.env
+token.json
+.trakt_token.json
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+build/
+dist/
