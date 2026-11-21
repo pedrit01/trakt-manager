@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Trakt manager creates and syncs Trakt (trakt.tv) lists from YAML/JSON definition files, via a web GUI, an HTTP API and a CLI, packaged in one Docker image (published to `ghcr.io/pedrit01/trakt-manager`). Behavior is specified in the OpenSpec changes under `openspec/changes/` (`dockerize-trakt-manager`, `add-web-gui`); the specs are the source of truth. `README.md` documents user-facing usage in Spanish.
+Trakt manager creates and syncs Trakt (trakt.tv) lists from YAML/JSON definition files, via a web GUI, an HTTP API and a CLI, packaged in one Docker image (published to `ghcr.io/pedrit01/trakt-manager`). Behavior is specified in the main OpenSpec specs under `openspec/specs/` (the source of truth); the history of how they came about is in `openspec/changes/archive/`. `README.md` documents user-facing usage in Spanish.
 
 The local Python is 3.9 but the project needs ≥3.11, so run everything in Docker.
 
@@ -49,8 +49,8 @@ Layers in `src/trakt_manager/` (CLI and API are thin and share the same core and
 - `cli` (Typer) and `api` (FastAPI): `--json` output and API responses are the same pydantic models (`SyncResult`, `ValidationOutcome`). The API requires `X-API-Key` (compared against the current key on each request) except on `/health`, `/setup*` and the GUI; protected routes return 503 in setup mode. It runs as a single worker. Every response carries a strict CSP (`default-src 'self'`) except `/docs`, `/redoc` and `/openapi.json`, which load Swagger from a CDN.
 - `web/`: the GUI, served by `StaticFiles` mounted at `/` *after* all API routes. Vanilla ES modules with no build step: `api.js` (fetch, X-API-Key from session/localStorage, Spanish error messages), `router.js` (`#/section/param`), `dom.js` (`h()` builds elements with `textContent`; never use `innerHTML` with data), `views/*.js` (one per section). The CSP forbids inline scripts and styles, so keep everything in files.
 
-`create-tracklist.py` is the original standalone script. `lists/doomsday.yaml` and `tests/fixtures/original_roadmap.json` were migrated from it, and a test checks that the YAML still matches the original data. Per the migration plan, it is deleted only after a real end-to-end check against Trakt (task 9.2).
+`lists/doomsday.yaml` and `tests/fixtures/original_roadmap.json` were migrated from the original standalone script `create-tracklist.py` (removed after a real end-to-end check against Trakt; see commit 3a717d2 for it), and a test checks that the YAML still matches the original data.
 
 ## OpenSpec workflow
 
-This project uses OpenSpec (`openspec/config.yaml`, schema `spec-driven`). Changes live in `openspec/changes/<name>/`; main specs in `openspec/specs/` (empty until a change is archived). Use the `openspec-propose`, `openspec-apply-change`, and `openspec-archive-change` skills; validate with `openspec validate <change> --strict`.
+This project uses OpenSpec (`openspec/config.yaml`, schema `spec-driven`). Changes live in `openspec/changes/<name>/`; main specs in `openspec/specs/`. Use the `openspec-propose`, `openspec-apply-change`, and `openspec-archive-change` skills; validate with `openspec validate <change> --strict`.

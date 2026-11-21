@@ -8,7 +8,6 @@ data/
 .git/
 openspec/
 .claude/
-create-tracklist.py
 **/__pycache__/
 **/*.egg-info/
 .venv/

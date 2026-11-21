@@ -4,7 +4,7 @@
 
 ## 1. Requisito previo
 
-- [ ] 1.1 Archivar `dockerize-trakt-manager` cuando estén cerradas sus tareas pendientes (o con la decisión explícita del usuario de archivarlo con ellas abiertas); verificar que existen `openspec/specs/web-api/spec.md` y `openspec/specs/container-runtime/spec.md` y que `openspec validate add-web-gui --strict` ya no muestra el aviso "Archive would refuse this delta"
+- [x] 1.1 Archivar `dockerize-trakt-manager` cuando estén cerradas sus tareas pendientes (o con la decisión explícita del usuario de archivarlo con ellas abiertas); verificar que existen `openspec/specs/web-api/spec.md` y `openspec/specs/container-runtime/spec.md` y que `openspec validate add-web-gui --strict` ya no muestra el aviso "Archive would refuse this delta"
 
 ## 2. Configuración en tiempo de ejecución (runtime-settings)
 

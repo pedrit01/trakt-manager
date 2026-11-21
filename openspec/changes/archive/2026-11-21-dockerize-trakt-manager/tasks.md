@@ -56,8 +56,8 @@
 
 ## 9. Integración y retirada del script
 
-- [ ] 9.1 Prueba de extremo a extremo en Docker con una cuenta real: `auth login`, `sync lists/doomsday.yaml --dry-run`, `sync` real, repetir `sync` (0 cambios) y recrear el contenedor (la sesión sigue activa); verificar en trakt.tv el orden y que no hay duplicados
-- [ ] 9.2 Eliminar `create-tracklist.py` y verificar que `pytest` y `docker compose run --rm trakt-manager validate lists/doomsday.yaml` siguen pasando
+- [x] 9.1 Prueba de extremo a extremo en Docker con una cuenta real: `auth login`, `sync lists/doomsday.yaml --dry-run`, `sync` real, repetir `sync` (0 cambios) y recrear el contenedor (la sesión sigue activa); verificar en trakt.tv el orden y que no hay duplicados
+- [x] 9.2 Eliminar `create-tracklist.py` y verificar que `pytest` y `docker compose run --rm trakt-manager validate lists/doomsday.yaml` siguen pasando
 
 ## Workflow follow-up
 
