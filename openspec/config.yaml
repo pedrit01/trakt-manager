@@ -1,0 +1,32 @@
+schema: spec-driven
+
+# Contexto del proyecto: restricciones que deben guiar todos los artefactos y flujos de OpenSpec.
+# Las mismas reglas están en CLAUDE.md; mantener ambos sincronizados.
+context: |
+  Responde siempre al usuario en español y escribe todos los artefactos (proposal, specs, design, tasks) en español.
+  Nunca ejecutes git commit ni git push: al terminar cada iteración, sugiere un mensaje de commit en inglés
+  (estilo Conventional Commits) para que el usuario haga el commit.
+  Todo el código debe ser perfectamente legible y estar documentado para que lo mantenga una persona:
+  nombres descriptivos (identificadores en inglés), funciones pequeñas con una sola responsabilidad,
+  type hints en todas las firmas, docstrings en español en cada módulo, clase y función pública
+  (qué hace, parámetros, retorno y errores), y comentarios que expliquen el porqué de las decisiones no obvias.
+
+# Reglas por artefacto.
+rules:
+  design:
+    - Al proponer módulos o interfaces, priorizar la legibilidad y la mantenibilidad por una persona frente a la concisión.
+  tasks:
+    - Cada tarea de implementación incluye documentar su código (docstrings en español y type hints) como parte de su verificación.
+    - No incluir tareas que hagan commit ni push.
+
+# Guía para las operaciones apply y archive.
+operations:
+  apply:
+    guidance:
+      - Responder siempre en español.
+      - Escribir código legible y documentado según las reglas del contexto; no dar una tarea por terminada si falta su documentación.
+      - No ejecutar git commit ni git push. Al final de cada iteración, sugerir un mensaje de commit en inglés (Conventional Commits).
+  archive:
+    guidance:
+      - Responder siempre en español.
+      - No ejecutar git commit ni git push; sugerir un mensaje de commit en inglés al terminar.
