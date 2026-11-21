@@ -197,3 +197,68 @@ def test_logout_revokes_and_deletes(tmp_path: Path) -> None:
     assert manager.logout() is True
     assert paths == ["/oauth/revoke"]
     assert not store.exists()
+
+
+# --- Client Secret opcional -------------------------------------------------------------------
+
+
+class RecordingTrakt:
+    """Responde con ``responses`` en orden y guarda el cuerpo JSON de cada petición."""
+
+    def __init__(self, *responses: httpx.Response) -> None:
+        self.responses = list(responses)
+        self.bodies: list[dict] = []
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.bodies.append(json.loads(request.content) if request.content else {})
+        return self.responses.pop(0) if len(self.responses) > 1 else self.responses[0]
+
+
+@pytest.mark.parametrize(("secret", "sends_secret"), [(None, False), ("", False), ("secret", True)])
+def test_device_flow_sends_secret_only_if_configured(tmp_path: Path, secret, sends_secret: bool) -> None:
+    """El sondeo del device flow solo envía client_secret si la aplicación lo tiene."""
+    trakt = RecordingTrakt(httpx.Response(200, json=TOKEN))
+    clock = FakeClock()
+    authorizer = DeviceFlowAuthorizer(make_client(trakt), secret, TokenStore(tmp_path / "t.json"), clock.sleep, clock.time)
+    authorizer.wait_for_authorization(device_code())
+    assert trakt.bodies[0]["client_id"] == "client-id"
+    assert ("client_secret" in trakt.bodies[0]) is sends_secret
+
+
+def test_refresh_and_revoke_without_secret(tmp_path: Path) -> None:
+    """Sin secreto, la renovación y la revocación se hacen solo con el Client ID."""
+    store = TokenStore(tmp_path / "token.json")
+    store.save(TOKEN)
+    trakt = RecordingTrakt(httpx.Response(200, json=dict(TOKEN, access_token="access-2")))
+    manager = TokenManager(store, make_client(trakt), None)
+    assert manager.refresh_access_token() == "access-2"
+    assert manager.logout() is True
+    assert [("client_secret" in body) for body in trakt.bodies] == [False, False]
+    assert trakt.bodies[0]["grant_type"] == "refresh_token"
+
+
+def test_device_flow_rejected_without_secret_explains_why(tmp_path: Path) -> None:
+    """Si Trakt rechaza la aplicación sin secreto (aunque sea con un 400), el error lo explica."""
+    trakt = RecordingTrakt(httpx.Response(400, json={"error": "invalid_client"}))
+    clock = FakeClock()
+    authorizer = DeviceFlowAuthorizer(make_client(trakt), None, TokenStore(tmp_path / "t.json"), clock.sleep, clock.time)
+    with pytest.raises(AuthError, match="Client Secret"):
+        authorizer.wait_for_authorization(device_code())
+    assert len(trakt.bodies) == 1, "no debe seguir sondeando"
+
+
+def test_pending_400_without_body_keeps_polling_without_secret(tmp_path: Path) -> None:
+    """Sin secreto, un 400 sin cuerpo sigue significando "pendiente"."""
+    trakt = RecordingTrakt(httpx.Response(400), httpx.Response(200, json=TOKEN))
+    clock = FakeClock()
+    authorizer = DeviceFlowAuthorizer(make_client(trakt), None, TokenStore(tmp_path / "t.json"), clock.sleep, clock.time)
+    assert authorizer.wait_for_authorization(device_code()) == TOKEN
+
+
+def test_refresh_rejected_without_secret_explains_why(tmp_path: Path) -> None:
+    """Si Trakt rechaza la renovación de una aplicación sin secreto, el error lo explica."""
+    store = TokenStore(tmp_path / "token.json")
+    store.save(TOKEN)
+    manager = TokenManager(store, make_client(lambda request: httpx.Response(401)), None)
+    with pytest.raises(AuthError, match="Client Secret"):
+        manager.refresh_access_token()

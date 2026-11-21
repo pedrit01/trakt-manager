@@ -28,6 +28,10 @@ CONFIGURABLE_KEYS: dict[str, str] = {
     "api_key": "API_KEY",
 }
 
+# Claves sin las que el servicio no puede funcionar. El Client Secret no está: las
+# aplicaciones nuevas de Trakt ya no lo tienen y el device flow funciona sin él.
+REQUIRED_KEYS = ("trakt_client_id", "api_key")
+
 SettingSource = Literal["env", "stored", "missing"]
 
 
@@ -85,12 +89,12 @@ class ResolvedSettings:
 
     @property
     def missing_variables(self) -> list[str]:
-        """Nombres de variable de las claves que faltan (por ejemplo ``API_KEY``)."""
-        return [CONFIGURABLE_KEYS[key] for key, source in self.sources.items() if source == "missing"]
+        """Nombres de variable de las claves obligatorias que faltan (por ejemplo ``API_KEY``)."""
+        return [CONFIGURABLE_KEYS[key] for key in REQUIRED_KEYS if self.sources[key] == "missing"]
 
     @property
     def is_complete(self) -> bool:
-        """Indica si están las tres claves y el servicio puede salir del modo configuración."""
+        """Indica si están las claves obligatorias y el servicio puede salir del modo configuración."""
         return not self.missing_variables
 
 

@@ -51,10 +51,17 @@ def test_dotenv_file_counts_as_environment(tmp_path: Path, monkeypatch: pytest.M
 
 
 def test_missing_values_are_reported_by_variable_name(tmp_path: Path) -> None:
-    """Las claves que faltan se informan con el nombre de su variable."""
-    resolved = resolve_settings(env_settings(tmp_path, trakt_client_id="id"), SettingsStore(tmp_path / "settings.json"))
-    assert resolved.missing_variables == ["TRAKT_CLIENT_SECRET", "API_KEY"]
+    """Las claves obligatorias que faltan se informan con el nombre de su variable."""
+    resolved = resolve_settings(env_settings(tmp_path), SettingsStore(tmp_path / "settings.json"))
+    assert resolved.missing_variables == ["TRAKT_CLIENT_ID", "API_KEY"]
     assert not resolved.is_complete
+
+
+def test_client_secret_is_optional(tmp_path: Path) -> None:
+    """Con el Client ID y la API_KEY basta: el Client Secret es opcional."""
+    resolved = resolve_settings(env_settings(tmp_path, trakt_client_id="id", api_key="k"), SettingsStore(tmp_path / "settings.json"))
+    assert resolved.is_complete
+    assert resolved.sources["trakt_client_secret"] == "missing"
 
 
 def test_settings_file_is_private_and_keeps_other_keys(tmp_path: Path) -> None:

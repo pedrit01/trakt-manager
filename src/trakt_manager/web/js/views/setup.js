@@ -2,8 +2,9 @@
  * Vista del asistente inicial (#/configurar).
  *
  * Se muestra cuando el servicio arranca sin configurar. Pide el código de
- * configuración (que aparece en los registros del contenedor) y las credenciales
- * de la aplicación de Trakt; al terminar muestra una sola vez la API_KEY generada.
+ * configuración (que aparece en los registros del contenedor), el Client ID de la
+ * aplicación de Trakt y, opcionalmente, su Client Secret (las aplicaciones nuevas
+ * de Trakt no tienen). Al terminar muestra una sola vez la API_KEY generada.
  */
 
 import { ApiError, api, setApiKey } from "../api.js";
@@ -12,7 +13,9 @@ import { navigate } from "../router.js";
 import { markConfigured, refreshSetupState } from "../session.js";
 
 const TRAKT_APPLICATIONS_URL = "https://trakt.tv/oauth/applications";
-const REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
+// trakt-manager inicia sesión con un código (device flow) y no usa la Redirect URI,
+// pero el formulario de Trakt puede pedirla. Trakt desaconseja "urn:ietf:wg:oauth:2.0:oob".
+const SUGGESTED_REDIRECT_URI = "http://localhost:8000/";
 
 /**
  * Pinta el asistente.
@@ -30,7 +33,7 @@ export async function renderSetup(view) {
   const message = h("div");
   const codeInput = h("input", { type: "text", id: "setup-code", autocomplete: "off", required: true, placeholder: "XXXX-XXXX" });
   const clientIdInput = h("input", { type: "text", id: "client-id", autocomplete: "off", required: true });
-  const secretInput = h("input", { type: "password", id: "client-secret", autocomplete: "off", required: true });
+  const secretInput = h("input", { type: "password", id: "client-secret", autocomplete: "off" });
   const submit = h("button", { type: "submit", className: "button primary" }, "Guardar configuración");
 
   const form = h(
@@ -53,7 +56,13 @@ export async function renderSetup(view) {
       : h("div", { className: "field" }, h("label", { for: "client-id" }, "Client ID de Trakt"), clientIdInput),
     fromEnv("trakt_client_secret")
       ? notice("info", "El Client Secret de Trakt viene de una variable de entorno.")
-      : h("div", { className: "field" }, h("label", { for: "client-secret" }, "Client Secret de Trakt"), secretInput),
+      : h(
+          "div",
+          { className: "field" },
+          h("label", { for: "client-secret" }, "Client Secret de Trakt (opcional)"),
+          secretInput,
+          h("p", { className: "hint" }, "Las aplicaciones nuevas de Trakt no tienen Client Secret: déjalo vacío. Rellénalo solo si tu aplicación lo tiene."),
+        ),
     message,
     submit,
   );
@@ -69,8 +78,13 @@ export async function renderSetup(view) {
         "ol",
         {},
         h("li", {}, "Entra en ", h("a", { href: TRAKT_APPLICATIONS_URL, target: "_blank", rel: "noopener noreferrer" }, "trakt.tv/oauth/applications"), " y pulsa «New Application»."),
-        h("li", {}, "Ponle cualquier nombre y en «Redirect URI» escribe:", h("div", { className: "secret-box" }, h("code", {}, REDIRECT_URI), copyButton(REDIRECT_URI))),
-        h("li", {}, "Guarda y copia aquí el Client ID y el Client Secret."),
+        h(
+          "li",
+          {},
+          "Ponle cualquier nombre. Si te pide una «Redirect URI», puedes poner esta (trakt-manager no la usa: el inicio de sesión es con un código):",
+          h("div", { className: "secret-box" }, h("code", {}, SUGGESTED_REDIRECT_URI), copyButton(SUGGESTED_REDIRECT_URI)),
+        ),
+        h("li", {}, "Guarda y copia aquí el Client ID (y el Client Secret solo si tu aplicación lo tiene)."),
       ),
       form,
     ),

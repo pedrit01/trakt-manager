@@ -34,7 +34,7 @@ def test_starts_in_setup_mode_and_logs_the_code(tmp_path, fake_trakt, caplog: py
         api = unconfigured_api(tmp_path, fake_trakt)
     assert SETUP_CODE in caplog.text
     assert api.get("/health").json() == {"status": "ok", "mode": "setup", "trakt_session": False}
-    assert api.get("/setup/status").json()["missing"] == ["TRAKT_CLIENT_ID", "TRAKT_CLIENT_SECRET", "API_KEY"]
+    assert api.get("/setup/status").json()["missing"] == ["TRAKT_CLIENT_ID", "API_KEY"]
 
 
 def test_protected_routes_return_503_in_setup_mode(tmp_path, fake_trakt) -> None:
@@ -121,7 +121,20 @@ def test_environment_values_cannot_be_changed(tmp_path, fake_trakt) -> None:
     assert api.put("/settings", headers=headers, json={"trakt_client_id": "otro"}).status_code == 409
 
 
-def test_empty_credentials_are_rejected(tmp_path, fake_trakt) -> None:
-    """No se pueden dejar vacías las credenciales de Trakt desde la GUI."""
+def test_empty_client_id_is_rejected_but_secret_can_be_removed(tmp_path, fake_trakt) -> None:
+    """El Client ID no puede quedar vacío; el Client Secret sí se puede borrar (es opcional)."""
     api, api_key = configured_api(tmp_path, fake_trakt)
-    assert api.put("/settings", headers={"X-API-Key": api_key}, json={"trakt_client_secret": " "}).status_code == 422
+    headers = {"X-API-Key": api_key}
+    assert api.put("/settings", headers=headers, json={"trakt_client_id": " "}).status_code == 422
+    response = api.put("/settings", headers=headers, json={"trakt_client_secret": ""})
+    assert response.status_code == 200
+    assert response.json()["trakt_client_secret"]["set"] is False
+    assert api.get("/health").json()["mode"] == "ready"
+
+
+def test_setup_without_client_secret(tmp_path, fake_trakt) -> None:
+    """El asistente se completa solo con el Client ID (las apps nuevas de Trakt no tienen secreto)."""
+    api = unconfigured_api(tmp_path, fake_trakt)
+    response = api.post("/setup", json={"setup_code": SETUP_CODE, "trakt_client_id": "client-id"})
+    assert response.status_code == 200 and response.json()["api_key"]
+    assert api.get("/health").json()["mode"] == "ready"

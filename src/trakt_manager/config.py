@@ -7,7 +7,8 @@ también se lee un ``.env`` del directorio actual, si existe, por comodidad.
 Variables admitidas (todas opcionales a nivel de carga; cada operación exige las
 que necesita mediante los métodos ``require_*``):
 
-- ``TRAKT_CLIENT_ID`` / ``TRAKT_CLIENT_SECRET``: credenciales de la aplicación de Trakt.
+- ``TRAKT_CLIENT_ID`` / ``TRAKT_CLIENT_SECRET``: credenciales de la aplicación de Trakt
+  (el secreto es opcional: las aplicaciones nuevas de Trakt no lo tienen).
 - ``API_KEY``: clave que deben enviar los clientes de la API HTTP.
 - ``DATA_DIR``: directorio donde se guarda el token (por defecto ``./data``).
 - ``LISTS_DIR``: directorio de definiciones de listas (por defecto ``./lists``).
@@ -56,14 +57,6 @@ class Settings(BaseSettings):
             ConfigError: Si ``TRAKT_CLIENT_ID`` no está configurado.
         """
         return _require(self.trakt_client_id, "TRAKT_CLIENT_ID")
-
-    def require_client_secret(self) -> str:
-        """Devuelve el Client Secret de Trakt.
-
-        Raises:
-            ConfigError: Si ``TRAKT_CLIENT_SECRET`` no está configurado.
-        """
-        return _require(self.trakt_client_secret, "TRAKT_CLIENT_SECRET")
 
     def require_api_key(self) -> str:
         """Devuelve la clave de la API HTTP.

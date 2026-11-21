@@ -102,12 +102,12 @@ class AppContext:
         return self._client_and_token_manager[1]
 
     def device_authorizer(self) -> DeviceFlowAuthorizer:
-        """Crea el ejecutor del device flow.
+        """Crea el ejecutor del device flow (el Client Secret es opcional).
 
         Raises:
-            ConfigError: Si falta ``TRAKT_CLIENT_ID`` o ``TRAKT_CLIENT_SECRET``.
+            ConfigError: Si falta ``TRAKT_CLIENT_ID``.
         """
-        return DeviceFlowAuthorizer(self.client, self.settings.require_client_secret(), self.token_store, sleep=self._sleep)
+        return DeviceFlowAuthorizer(self.client, self.settings.trakt_client_secret, self.token_store, sleep=self._sleep)
 
     def logout(self) -> bool:
         """Cierra la sesión de Trakt aunque falten credenciales.
@@ -262,13 +262,14 @@ class AppRuntime:
 
     # --- cambios de configuración ---------------------------------------------------------
 
-    def complete_setup(self, setup_code: str, client_id: str, client_secret: str) -> str:
+    def complete_setup(self, setup_code: str, client_id: str, client_secret: str = "") -> str:
         """Guarda la configuración inicial desde el asistente.
 
         Args:
             setup_code: Código de configuración escrito en los registros.
             client_id: Client ID de la aplicación de Trakt.
-            client_secret: Client Secret de la aplicación de Trakt.
+            client_secret: Client Secret de la aplicación de Trakt, si la tiene (opcional:
+                las aplicaciones nuevas de Trakt no tienen).
 
         Returns:
             La ``API_KEY``: la generada, o la del entorno si ya venía definida allí
@@ -277,7 +278,7 @@ class AppRuntime:
         Raises:
             AlreadyConfiguredError: Si el servicio ya estaba configurado.
             InvalidSetupCodeError: Si el código no es el vigente.
-            ConfigError: Si falta el Client ID o el Client Secret.
+            ConfigError: Si falta el Client ID.
         """
         with self._lock:
             if self.is_configured():
@@ -286,15 +287,12 @@ class AppRuntime:
                 raise InvalidSetupCodeError("El código de configuración no es correcto. Cópialo de los registros del contenedor.")
             sources = self._resolved.sources
             changes: dict[str, str | None] = {}
-            for key, value, variable in (
-                ("trakt_client_id", client_id, "TRAKT_CLIENT_ID"),
-                ("trakt_client_secret", client_secret, "TRAKT_CLIENT_SECRET"),
-            ):
-                if sources[key] == "env":
-                    continue
-                if not value.strip():
-                    raise ConfigError(f"Falta {variable}: indica el valor de tu aplicación de Trakt.")
-                changes[key] = value
+            if sources["trakt_client_id"] != "env":
+                if not client_id.strip():
+                    raise ConfigError("Falta TRAKT_CLIENT_ID: indica el Client ID de tu aplicación de Trakt.")
+                changes["trakt_client_id"] = client_id
+            if sources["trakt_client_secret"] != "env" and client_secret.strip():
+                changes["trakt_client_secret"] = client_secret
             api_key = ""
             if sources["api_key"] != "env":
                 api_key = generate_api_key()

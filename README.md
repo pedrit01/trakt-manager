@@ -13,7 +13,7 @@ No hace falta clonar el repositorio ni abrir una terminal.
 1. **Descarga y arranca la imagen.** En Docker Desktop, busca `ghcr.io/pedrit01/trakt-manager` y pulsa *Run*. En las opciones, publica el puerto **8000** del contenedor (*Host port* `8000`) y, para no perder datos al borrar el contenedor, añade un volumen con *Container path* `/data`. En OrbStack, haz lo mismo desde *Containers → New*.
 2. **Abre <http://localhost:8000/>.** Como aún no está configurado, aparece el asistente.
 3. **Copia el código de configuración.** Está en los registros del contenedor (*Containers → trakt-manager → Logs*), en la línea «usa este código de configuración: XXXX-XXXX». Así solo quien controla el contenedor puede configurarlo.
-4. **Crea una aplicación en Trakt** en <https://trakt.tv/oauth/applications> → *New Application*. Ponle cualquier nombre y en *Redirect URI* escribe `urn:ietf:wg:oauth:2.0:oob`. Copia el *Client ID* y el *Client Secret* en el asistente.
+4. **Crea una aplicación en Trakt** en <https://trakt.tv/oauth/applications> → *New Application* y ponle cualquier nombre. Copia el *Client ID* en el asistente. Si el formulario pide una *Redirect URI*, pon `http://localhost:8000/`: trakt-manager no la usa, porque inicia sesión con un código (device flow). El *Client Secret* es **opcional**. Las aplicaciones nuevas de Trakt no lo tienen, así que déjalo vacío salvo que tu aplicación lo tenga.
 5. **Guarda la clave de API** que aparece al terminar (por ejemplo, en tu gestor de contraseñas). No se vuelve a mostrar, y la necesitarás para entrar desde otro navegador o para usar la API.
 
 La configuración, el token de Trakt y las definiciones que guardes desde la interfaz viven en `/data`, así que se conservan al recrear o actualizar el contenedor si mantienes el mismo volumen.
@@ -37,7 +37,7 @@ docker compose ps          # el servicio debe aparecer como "healthy"
 
 Después abre <http://127.0.0.1:8000/> y sigue el asistente (el código sale en `docker compose logs`).
 
-También puedes configurarlo por variables de entorno en lugar de con el asistente: `cp .env.example .env` y rellena `TRAKT_CLIENT_ID`, `TRAKT_CLIENT_SECRET` y `API_KEY`. Lo que venga del entorno **tiene prioridad** y la interfaz lo muestra como no editable.
+También puedes configurarlo por variables de entorno en lugar de con el asistente: `cp .env.example .env` y rellena `TRAKT_CLIENT_ID` y `API_KEY` (y `TRAKT_CLIENT_SECRET` solo si tu aplicación de Trakt lo tiene). Lo que venga del entorno **tiene prioridad** y la interfaz lo muestra como no editable.
 
 Con compose también puedes usar el CLI, que comparte la configuración con la interfaz web:
 
@@ -155,7 +155,7 @@ La interfaz está en `src/trakt_manager/web/`: HTML, CSS y módulos JavaScript e
 
 ```bash
 docker compose run --rm -p 8080:8080 --entrypoint python tests tests/demo_server.py
-# http://localhost:8080/ · código de configuración: AB12-CD34 · cualquier Client ID/Secret vale
+# http://localhost:8080/ · código de configuración: AB12-CD34 · cualquier Client ID vale
 ```
 
 En la demostración, el login con Trakt se confirma solo a los 6 segundos.

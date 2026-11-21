@@ -95,9 +95,14 @@ function credentialsCard(settings, reload) {
       h(
         "div",
         { className: "field" },
-        h("label", { for: "settings-client-secret" }, "Client Secret"),
+        h("label", { for: "settings-client-secret" }, "Client Secret (opcional)"),
         secretInput,
-        h("p", { className: "hint" }, `Origen: ${SOURCE_LABELS[secret.source]}. Por seguridad nunca se muestra.`),
+        h(
+          "p",
+          { className: "hint" },
+          `Origen: ${SOURCE_LABELS[secret.source]}. Por seguridad nunca se muestra. `,
+          "Las aplicaciones nuevas de Trakt no tienen Client Secret.",
+        ),
       ),
       message,
       editable

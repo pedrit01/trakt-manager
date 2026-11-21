@@ -19,9 +19,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+import httpx
+
 from trakt_manager.errors import (
     AuthError,
-    ConfigError,
     DeviceCodeExpiredError,
     NotAuthenticatedError,
     TraktAPIError,
@@ -112,6 +113,39 @@ def is_token_expired(token: dict[str, Any], now: float) -> bool:
     return now >= float(created_at) + float(expires_in) - TOKEN_EXPIRY_MARGIN_SECONDS
 
 
+# Errores OAuth con los que Trakt indica que no acepta el cliente (por ejemplo,
+# porque esa aplicación sí necesita Client Secret).
+CLIENT_REJECTED_ERRORS = {"invalid_client", "unauthorized_client"}
+
+MISSING_SECRET_HINT = (
+    "Trakt ha rechazado la aplicación sin Client Secret. Si tu aplicación de Trakt tiene "
+    "Client Secret, configúralo (TRAKT_CLIENT_SECRET o Ajustes en la interfaz web)."
+)
+
+
+def client_credentials(client_id: str, client_secret: str | None) -> dict[str, str]:
+    """Credenciales de la aplicación para los endpoints OAuth de Trakt.
+
+    Las aplicaciones nuevas de Trakt no tienen Client Secret: entonces solo se
+    envía el Client ID. Las antiguas que sí lo tienen lo siguen enviando.
+    """
+    credentials = {"client_id": client_id}
+    if client_secret:
+        credentials["client_secret"] = client_secret
+    return credentials
+
+
+def is_client_rejected(response: httpx.Response) -> bool:
+    """Indica si Trakt ha rechazado la aplicación (cliente no válido) en una llamada OAuth."""
+    if response.status_code in (401, 403):
+        return True
+    try:
+        body = response.json()
+    except ValueError:
+        return False
+    return isinstance(body, dict) and body.get("error") in CLIENT_REJECTED_ERRORS
+
+
 class TokenManager:
     """Proporciona tokens de acceso válidos, renovándolos cuando hace falta.
 
@@ -120,7 +154,8 @@ class TokenManager:
     Args:
         store: Almacén del token en disco.
         client: Cliente de Trakt para las llamadas OAuth (no autenticadas).
-        client_secret: Client Secret de la aplicación; solo se exige al renovar o revocar.
+        client_secret: Client Secret de la aplicación, si la aplicación de Trakt lo tiene
+            (las nuevas no): se envía al renovar y revocar solo si existe.
         clock: Reloj de pared (segundos desde epoch); los tests lo sustituyen.
     """
 
@@ -164,7 +199,6 @@ class TokenManager:
 
         Raises:
             NotAuthenticatedError: Si no hay token o no tiene ``refresh_token``.
-            ConfigError: Si falta ``TRAKT_CLIENT_SECRET``.
             AuthError: Si Trakt rechaza la renovación.
         """
         with self._refresh_lock:
@@ -176,12 +210,13 @@ class TokenManager:
                 "/oauth/token",
                 json={
                     "refresh_token": token["refresh_token"],
-                    "client_id": self._client.client_id,
-                    "client_secret": self._require_secret(),
+                    **client_credentials(self._client.client_id, self._client_secret),
                     "redirect_uri": OUT_OF_BAND_REDIRECT_URI,
                     "grant_type": "refresh_token",
                 },
             )
+            if not response.is_success and not self._client_secret and is_client_rejected(response):
+                raise AuthError(MISSING_SECRET_HINT)
             if not response.is_success:
                 raise AuthError(
                     f"Trakt ha rechazado la renovación del token (HTTP {response.status_code}). "
@@ -201,26 +236,19 @@ class TokenManager:
             ``True`` si había una sesión y se ha cerrado.
         """
         token = self._store.load()
-        if token is not None and self._client_secret:
+        if token is not None:
             try:
                 self._client.request(
                     "POST",
                     "/oauth/revoke",
                     json={
                         "token": token["access_token"],
-                        "client_id": self._client.client_id,
-                        "client_secret": self._client_secret,
+                        **client_credentials(self._client.client_id, self._client_secret),
                     },
                 )
             except TraktAPIError:
                 pass
         return self._store.delete()
-
-    def _require_secret(self) -> str:
-        """Devuelve el Client Secret o lanza un error que nombra la variable."""
-        if not self._client_secret:
-            raise ConfigError("Falta la variable de entorno TRAKT_CLIENT_SECRET.")
-        return self._client_secret
 
 
 def get_username(client: TraktClient) -> str:
@@ -239,7 +267,7 @@ class DeviceFlowAuthorizer:
 
     Args:
         client: Cliente de Trakt para las llamadas OAuth.
-        client_secret: Client Secret de la aplicación.
+        client_secret: Client Secret de la aplicación, si la tiene (las nuevas de Trakt no).
         store: Almacén donde se guarda el token conseguido.
         sleep: Función de espera entre sondeos; los tests la sustituyen.
         clock: Reloj de pared para controlar la caducidad del código.
@@ -248,7 +276,7 @@ class DeviceFlowAuthorizer:
     def __init__(
         self,
         client: TraktClient,
-        client_secret: str,
+        client_secret: str | None,
         store: TokenStore,
         sleep: Callable[[float], None] = time.sleep,
         clock: Callable[[], float] = time.time,
@@ -302,12 +330,16 @@ class DeviceFlowAuthorizer:
                 "/oauth/device/token",
                 json={
                     "code": code.device_code,
-                    "client_id": self._client.client_id,
-                    "client_secret": self._client_secret,
+                    **client_credentials(self._client.client_id, self._client_secret),
                 },
                 retry_rate_limits=False,
             )
             status = response.status_code
+            # Se comprueba antes que el 400 "pendiente": si Trakt rechazara la aplicación
+            # con un 400, se seguiría sondeando hasta que caducase el código y el usuario
+            # solo vería "código caducado" en vez de la causa real.
+            if not self._client_secret and is_client_rejected(response):
+                raise AuthError(MISSING_SECRET_HINT)
             if status == 200:
                 token = response.json()
                 self._store.save(token)

@@ -26,7 +26,6 @@ def test_reads_values_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     ("method_name", "variable_name"),
     [
         ("require_client_id", "TRAKT_CLIENT_ID"),
-        ("require_client_secret", "TRAKT_CLIENT_SECRET"),
         ("require_api_key", "API_KEY"),
     ],
 )

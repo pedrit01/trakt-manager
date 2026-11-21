@@ -78,7 +78,11 @@ class SetupRequest(BaseModel):
 
 
 class SettingsUpdate(BaseModel):
-    """Cambios de credenciales de Trakt desde la GUI (la API_KEY se regenera aparte)."""
+    """Cambios de credenciales de Trakt desde la GUI (la API_KEY se regenera aparte).
+
+    Un Client Secret vacío lo borra (las aplicaciones nuevas de Trakt no tienen);
+    el Client ID no puede quedar vacío.
+    """
 
     trakt_client_id: str | None = None
     trakt_client_secret: str | None = None
@@ -159,8 +163,8 @@ def create_app(runtime: AppRuntime | None = None) -> FastAPI:
     def update_settings(update: SettingsUpdate) -> dict[str, Any]:
         """Cambia las credenciales de Trakt guardadas; si cambia el Client ID se cierra la sesión."""
         changes = update.model_dump(exclude_none=True)
-        if any(not value.strip() for value in changes.values()):
-            raise HTTPException(status_code=422, detail="Las credenciales de Trakt no pueden quedar vacías.")
+        if "trakt_client_id" in changes and not changes["trakt_client_id"].strip():
+            raise HTTPException(status_code=422, detail="El Client ID de Trakt no puede quedar vacío.")
         runtime.update_settings(changes)
         return _settings_view(runtime)
 
