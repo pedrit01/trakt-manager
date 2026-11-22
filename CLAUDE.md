@@ -25,9 +25,11 @@ docker compose run --rm --build tests              # full test suite (pytest, Py
 docker compose run --rm tests tests/test_sync.py   # one file
 docker compose run --rm tests -k shared_notes      # tests matching a name
 docker compose up -d --build                       # GUI + API on :8000 (.env optional: without it, setup mode)
-docker compose run --rm trakt-manager <command>    # any CLI command, e.g. sync lists/doomsday.yaml --dry-run
+docker compose run --rm --build trakt-manager <command>    # any CLI command, e.g. sync lists/doomsday.yaml --dry-run
 docker compose run --rm -p 8080:8080 --entrypoint python tests tests/demo_server.py   # GUI against the fake Trakt
 ```
+
+The `trakt-manager` service has both `image: ghcr.io/pedrit01/trakt-manager:${TRAKT_MANAGER_VERSION:-latest}` and `build`: without `--build`, compose pulls the *published* image, not your local code.
 
 There is no linter configured. Tests never call the real Trakt API: `tests/fake_trakt.py` is an in-memory fake (catalog, user lists, OAuth) plugged in through `httpx.MockTransport`. `tests/conftest.py` has `make_context` (an `AppContext` wired to it, injected into CLI tests via `CliRunner.invoke(..., obj=context)`) and `make_runtime` (an `AppRuntime`, passed to `create_app(runtime)`; values passed to it count as "from the environment"). The GUI JavaScript has no automated tests: check it in a real browser against `tests/demo_server.py`, and syntax-check it with `node --input-type=module --check`.
 

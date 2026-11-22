@@ -6,6 +6,11 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Cambiado
+
+- `docker compose up` descarga la imagen publicada `ghcr.io/pedrit01/trakt-manager` en lugar de construirla; `--build` sigue construyendo desde el código local. La versión se fija con `TRAKT_MANAGER_VERSION` (por defecto `latest`).
+- El README unifica la instalación en torno a la imagen publicada (Docker Desktop/OrbStack o `docker compose`) y explica cómo actualizar.
+
 ## [0.1.0] - 2026-11-22
 
 Primera versión publicada. Sustituye al script suelto `create-tracklist.py` por un gestor de listas de Trakt reutilizable, empaquetado en una sola imagen Docker.
