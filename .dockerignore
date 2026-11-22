@@ -1,0 +1,16 @@
+# Secretos y datos locales: nunca deben entrar en la imagen.
+.env
+token.json
+.trakt_token.json
+data/
+
+# Ficheros que la imagen no necesita.
+.git/
+openspec/
+.claude/
+**/__pycache__/
+**/*.egg-info/
+.venv/
+.pytest_cache/
+build/
+dist/

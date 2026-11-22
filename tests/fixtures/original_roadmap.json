@@ -1,0 +1,281 @@
+[
+  {
+    "order": 1,
+    "title": "Bruja Escarlata y Visión",
+    "query": "WandaVision",
+    "year": 2021,
+    "kind": "episode_list",
+    "season": 1,
+    "episodes": [
+      4,
+      7,
+      8,
+      9
+    ],
+    "block": "1. Inicio del Multiverso",
+    "is_extra": false,
+    "note": "1. Inicio del Multiverso | Ep. 4, 7, 8 y 9 (si vas justo: solo 8 y 9)"
+  },
+  {
+    "order": 2,
+    "title": "Shang-Chi y la leyenda de los Diez Anillos",
+    "query": "Shang-Chi and the Legend of the Ten Rings",
+    "year": 2021,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "1. Inicio del Multiverso",
+    "is_extra": false,
+    "note": "1. Inicio del Multiverso | Película completa"
+  },
+  {
+    "order": 3,
+    "title": "Falcon y el Soldado de Invierno",
+    "query": "The Falcon and the Winter Soldier",
+    "year": 2021,
+    "kind": "episode_list",
+    "season": 1,
+    "episodes": [
+      1,
+      4,
+      5,
+      6
+    ],
+    "block": "1. Inicio del Multiverso",
+    "is_extra": false,
+    "note": "1. Inicio del Multiverso | Ep. 1, 4, 5 y 6"
+  },
+  {
+    "order": 4,
+    "title": "Spider-Man: No Way Home",
+    "query": "Spider-Man: No Way Home",
+    "year": 2021,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "1. Inicio del Multiverso",
+    "is_extra": false,
+    "note": "1. Inicio del Multiverso | Película completa"
+  },
+  {
+    "order": 5,
+    "title": "Doctor Strange en el Multiverso de la Locura",
+    "query": "Doctor Strange in the Multiverse of Madness",
+    "year": 2022,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "1. Inicio del Multiverso",
+    "is_extra": false,
+    "note": "1. Inicio del Multiverso | Película completa"
+  },
+  {
+    "order": 6,
+    "title": "Black Panther: Wakanda Forever",
+    "query": "Black Panther: Wakanda Forever",
+    "year": 2022,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "1. Inicio del Multiverso",
+    "is_extra": false,
+    "note": "1. Inicio del Multiverso | Película completa"
+  },
+  {
+    "order": 7,
+    "title": "Ms. Marvel",
+    "query": "Ms. Marvel",
+    "year": 2022,
+    "kind": "episode_list",
+    "season": 1,
+    "episodes": [
+      1,
+      6
+    ],
+    "block": "1. Inicio del Multiverso",
+    "is_extra": false,
+    "note": "1. Inicio del Multiverso | Ep. 1 y 6 (si ves The Marvels)"
+  },
+  {
+    "order": 8,
+    "title": "Ant-Man y la Avispa: Quantumania",
+    "query": "Ant-Man and the Wasp: Quantumania",
+    "year": 2023,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "2. La grieta y la AVT",
+    "is_extra": false,
+    "note": "2. La grieta y la AVT | Película completa"
+  },
+  {
+    "order": 9,
+    "title": "The Marvels",
+    "query": "The Marvels",
+    "year": 2023,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "2. La grieta y la AVT",
+    "is_extra": false,
+    "note": "2. La grieta y la AVT | Película completa (o acto final + postcréditos)"
+  },
+  {
+    "order": 10,
+    "title": "Loki – Temporada 2",
+    "query": "Loki",
+    "year": 2021,
+    "kind": "episode_list",
+    "season": 2,
+    "episodes": [
+      1,
+      4,
+      5,
+      6
+    ],
+    "block": "2. La grieta y la AVT",
+    "is_extra": false,
+    "note": "2. La grieta y la AVT | T2: Ep. 1, 4, 5 y 6"
+  },
+  {
+    "order": 11,
+    "title": "Deadpool y Lobezno",
+    "query": "Deadpool & Wolverine",
+    "year": 2024,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "2. La grieta y la AVT",
+    "is_extra": false,
+    "note": "2. La grieta y la AVT | Película completa"
+  },
+  {
+    "order": 12,
+    "title": "Agatha, ¿quién si no?",
+    "query": "Agatha All Along",
+    "year": 2024,
+    "kind": "episode_list",
+    "season": 1,
+    "episodes": [
+      6,
+      8,
+      9
+    ],
+    "block": "2. La grieta y la AVT",
+    "is_extra": false,
+    "note": "2. La grieta y la AVT | Ep. 6, 8 y 9"
+  },
+  {
+    "order": 13,
+    "title": "Capitán América: Brave New World",
+    "query": "Captain America: Brave New World",
+    "year": 2025,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "3. Recta final hacia Doomsday",
+    "is_extra": false,
+    "note": "3. Recta final hacia Doomsday | Película completa"
+  },
+  {
+    "order": 14,
+    "title": "Thunderbolts*",
+    "query": "Thunderbolts*",
+    "year": 2025,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "3. Recta final hacia Doomsday",
+    "is_extra": false,
+    "note": "3. Recta final hacia Doomsday | Película completa"
+  },
+  {
+    "order": 15,
+    "title": "Los 4 Fantásticos: Primeros pasos",
+    "query": "The Fantastic Four: First Steps",
+    "year": 2025,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "3. Recta final hacia Doomsday",
+    "is_extra": false,
+    "note": "3. Recta final hacia Doomsday | Película completa"
+  },
+  {
+    "order": 16,
+    "title": "Spider-Man: Brand New Day",
+    "query": "Spider-Man: Brand New Day",
+    "year": 2026,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "3. Recta final hacia Doomsday",
+    "is_extra": false,
+    "note": "3. Recta final hacia Doomsday | Película completa"
+  },
+  {
+    "order": 17,
+    "title": "VisionQuest",
+    "query": "VisionQuest",
+    "year": 2026,
+    "kind": "episode_list",
+    "season": 1,
+    "episodes": [
+      1,
+      2,
+      7,
+      8
+    ],
+    "block": "3. Recta final hacia Doomsday",
+    "is_extra": false,
+    "note": "3. Recta final hacia Doomsday | Ep. 1, 2, 7 y 8"
+  },
+  {
+    "order": 18,
+    "title": "Vengadores: Endgame Encore (escenas nuevas)",
+    "query": "Avengers: Endgame",
+    "year": 2019,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "4. Extras antes del cine",
+    "is_extra": true,
+    "note": "4. Extras antes del cine | Solo final extendido + créditos (5-6 min). Ver al final."
+  },
+  {
+    "order": 19,
+    "title": "X-Men (2000)",
+    "query": "X-Men",
+    "year": 2000,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "4. Extras antes del cine",
+    "is_extra": true,
+    "note": "4. Extras antes del cine | Película completa (repaso clásico)"
+  },
+  {
+    "order": 20,
+    "title": "X2 (2003)",
+    "query": "X2",
+    "year": 2003,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "4. Extras antes del cine",
+    "is_extra": true,
+    "note": "4. Extras antes del cine | Película completa (repaso clásico)"
+  },
+  {
+    "order": 21,
+    "title": "Viuda Negra",
+    "query": "Black Widow",
+    "year": 2021,
+    "kind": "movie",
+    "season": null,
+    "episodes": [],
+    "block": "4. Extras antes del cine",
+    "is_extra": true,
+    "note": "4. Extras antes del cine | Solo si no la viste en su día"
+  }
+]

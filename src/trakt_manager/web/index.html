@@ -1,0 +1,41 @@
+<!doctype html>
+<!--
+  Interfaz web de trakt-manager.
+
+  Es una página única: la cabecera y la navegación son fijas y cada sección se
+  pinta dentro de <main id="view"> desde js/views/. No se carga nada de fuera del
+  propio servicio (la cabecera Content-Security-Policy lo impide), y no hay
+  scripts ni estilos en línea por la misma razón.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>trakt-manager</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/definiciones">trakt-manager</a>
+    <nav class="nav" id="nav" hidden>
+      <a href="#/definiciones" data-section="definiciones">Definiciones</a>
+      <a href="#/listas" data-section="listas">Mis listas</a>
+      <a href="#/trakt" data-section="trakt">Trakt</a>
+      <a href="#/ajustes" data-section="ajustes">Ajustes</a>
+    </nav>
+    <div class="session" id="session" hidden>
+      <a class="badge" id="trakt-badge" href="#/trakt">Trakt: …</a>
+      <button type="button" class="button ghost small" id="logout-button">Salir</button>
+    </div>
+  </header>
+
+  <main id="view" class="view" tabindex="-1">
+    <p class="muted">Cargando…</p>
+  </main>
+
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+</body>
+</html>

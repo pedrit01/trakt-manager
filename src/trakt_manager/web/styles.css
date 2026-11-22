@@ -1,0 +1,272 @@
+/*
+  Estilos de la interfaz web de trakt-manager.
+
+  - Los colores se definen como variables en :root y se redefinen para el modo
+    oscuro del sistema, así ningún componente lleva colores fijos.
+  - El diseño parte del móvil (una columna) y se ensancha con min-width.
+*/
+
+:root {
+  --color-bg: #f6f6f4;
+  --color-surface: #ffffff;
+  --color-surface-muted: #efefec;
+  --color-text: #1d1d1b;
+  --color-text-muted: #5f5f5a;
+  --color-border: #dcdcd6;
+  --color-accent: #c8102e;
+  --color-accent-text: #ffffff;
+  --color-success: #1f7a3f;
+  --color-success-bg: #e3f3e8;
+  --color-warning: #8a5a00;
+  --color-warning-bg: #fbf0d9;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fbe5e3;
+  --color-focus: #2f6fdb;
+
+  --radius: 10px;
+  --radius-small: 6px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 2px 8px rgb(0 0 0 / 4%);
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #141413;
+    --color-surface: #1e1e1c;
+    --color-surface-muted: #262624;
+    --color-text: #ececE8;
+    --color-text-muted: #a3a39c;
+    --color-border: #363633;
+    --color-accent: #ef4056;
+    --color-success: #6fcf8f;
+    --color-success-bg: #18321f;
+    --color-warning: #f0bf5a;
+    --color-warning-bg: #352a12;
+    --color-danger: #ff8a80;
+    --color-danger-bg: #3a1a18;
+    --color-focus: #7aa7ff;
+    --shadow: none;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a { color: inherit; }
+code, pre, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* --- Cabecera ------------------------------------------------------------------------- */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.brand { font-weight: 700; text-decoration: none; margin-right: auto; }
+
+.nav { display: flex; flex-wrap: wrap; gap: var(--space-1); order: 3; width: 100%; }
+.nav a {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-small);
+  text-decoration: none;
+  color: var(--color-text-muted);
+}
+.nav a.active { background: var(--color-surface-muted); color: var(--color-text); font-weight: 600; }
+
+.session { display: flex; align-items: center; gap: var(--space-2); }
+
+@media (min-width: 760px) {
+  .nav { order: 0; width: auto; }
+  .brand { margin-right: var(--space-4); }
+  .session { margin-left: auto; }
+}
+
+/* --- Contenido ------------------------------------------------------------------------ */
+
+.view { max-width: 980px; margin: 0 auto; padding: var(--space-5) var(--space-4) var(--space-6); }
+.view:focus { outline: none; }
+
+h1 { font-size: 1.5rem; margin: 0 0 var(--space-4); }
+h2 { font-size: 1.15rem; margin: var(--space-5) 0 var(--space-3); }
+h3 { font-size: 1rem; margin: var(--space-4) 0 var(--space-2); }
+p { margin: 0 0 var(--space-3); }
+.muted { color: var(--color-text-muted); }
+.small-text { font-size: 0.875rem; }
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.card.narrow { max-width: 520px; margin-left: auto; margin-right: auto; }
+
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.row.spread { justify-content: space-between; }
+.stack > * + * { margin-top: var(--space-3); }
+
+/* --- Formularios ---------------------------------------------------------------------- */
+
+label { display: block; font-weight: 600; margin-bottom: var(--space-1); }
+.field { margin-bottom: var(--space-4); }
+.hint { font-size: 0.875rem; color: var(--color-text-muted); margin-top: var(--space-1); }
+
+input[type="text"], input[type="password"], textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  color: inherit;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+}
+textarea { min-height: 220px; font-family: var(--font-mono); font-size: 0.875rem; resize: vertical; }
+.checkbox { display: flex; align-items: center; gap: var(--space-2); font-weight: 400; }
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  cursor: pointer;
+  text-decoration: none;
+}
+.button:hover { filter: brightness(0.97); }
+.button:disabled { opacity: 0.55; cursor: not-allowed; }
+.button.primary { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-accent-text); }
+.button.danger { color: var(--color-danger); }
+.button.ghost { background: transparent; }
+.button.small { padding: var(--space-1) var(--space-3); font-size: 0.875rem; }
+
+/* --- Avisos, insignias y bloques de código -------------------------------------------- */
+
+.badge {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.badge.ok { background: var(--color-success-bg); color: var(--color-success); }
+.badge.warn { background: var(--color-warning-bg); color: var(--color-warning); }
+.badge.error { background: var(--color-danger-bg); color: var(--color-danger); }
+
+.notice { padding: var(--space-3) var(--space-4); border-radius: var(--radius-small); margin-bottom: var(--space-4); }
+.notice.info { background: var(--color-surface-muted); }
+.notice.ok { background: var(--color-success-bg); color: var(--color-success); }
+.notice.warn { background: var(--color-warning-bg); color: var(--color-warning); }
+.notice.error { background: var(--color-danger-bg); color: var(--color-danger); }
+.notice ul { margin: var(--space-2) 0 0; padding-left: var(--space-5); }
+
+.secret-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-small);
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+.secret-box code { flex: 1 1 240px; }
+
+.big-code { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; letter-spacing: 0.12em; }
+
+/* --- Tablas --------------------------------------------------------------------------- */
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); vertical-align: top; }
+th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
+td.number { text-align: right; font-variant-numeric: tabular-nums; }
+td.actions { white-space: nowrap; text-align: right; }
+
+/* En móvil las tablas pasan a tarjetas: cada fila es un bloque y cada celda lleva su título. */
+@media (max-width: 640px) {
+  table.responsive thead { display: none; }
+  table.responsive tr { display: block; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); }
+  table.responsive td { display: flex; justify-content: space-between; gap: var(--space-3); border: 0; padding: var(--space-1) 0; }
+  table.responsive td::before { content: attr(data-label); font-weight: 600; color: var(--color-text-muted); }
+  table.responsive td.actions { justify-content: flex-start; flex-wrap: wrap; }
+  table.responsive td.actions::before { content: none; }
+}
+
+/* --- Diálogos y notificaciones -------------------------------------------------------- */
+
+dialog {
+  width: min(560px, calc(100vw - 2 * var(--space-4)));
+  max-height: calc(100vh - 2 * var(--space-5));
+  padding: var(--space-5);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+dialog::backdrop { background: rgb(0 0 0 / 45%); }
+dialog .row { margin-top: var(--space-5); justify-content: flex-end; }
+
+.toasts { position: fixed; right: var(--space-4); bottom: var(--space-4); left: var(--space-4); display: grid; gap: var(--space-2); justify-items: end; pointer-events: none; }
+.toast { max-width: 420px; padding: var(--space-3) var(--space-4); border-radius: var(--radius-small); background: var(--color-text); color: var(--color-bg); box-shadow: var(--shadow); }
+.toast.error { background: var(--color-danger); color: #fff; }
+
+/* --- Informe de sincronización -------------------------------------------------------- */
+
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-4); }
+.summary-grid div { padding: var(--space-3); background: var(--color-surface-muted); border-radius: var(--radius-small); }
+.summary-grid strong { display: block; font-size: 1.4rem; }
+
+ol.items { padding-left: var(--space-5); margin: 0; }
+ol.items li { padding: var(--space-1) 0; }
+
+/* Oculto a la vista pero accesible (lo usa el copiado alternativo al portapapeles). */
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+
+select.button { appearance: auto; font-weight: 400; }
+
+/* --- Ajustes de espaciado ------------------------------------------------------------- */
+
+/* El primer elemento de una tarjeta no necesita margen superior. */
+.card > :first-child { margin-top: 0; }
+
+/* Botones de acción de una fila: separados y sin partirse. */
+td.actions .button + .button { margin-left: var(--space-2); }
+td.number { white-space: nowrap; }
+
+/* Los botones dentro de un bloque de código mantienen la fuente normal. */
+.secret-box .button { font-family: var(--font); }

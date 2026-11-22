@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trakt-manager"
+version = "0.1.0"
+description = "Gestor de listas de Trakt: CLI y API HTTP para crear y sincronizar listas a partir de ficheros de definición."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27,<1",
+    "pydantic>=2.6,<3",
+    "pydantic-settings>=2.2,<3",
+    "PyYAML>=6,<7",
+    "typer>=0.12,<1",
+    "fastapi>=0.110,<1",
+    "uvicorn>=0.29,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<9",
+]
+
+[project.scripts]
+trakt-manager = "trakt_manager.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# Ficheros estáticos de la GUI web, servidos por la propia API.
+[tool.setuptools.package-data]
+trakt_manager = ["web/*", "web/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Aviso interno de Starlette sobre su TestClient; no afecta al código de la aplicación.
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]
