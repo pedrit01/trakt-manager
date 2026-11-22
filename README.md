@@ -6,7 +6,16 @@ Cada definición describe la lista tal como debe quedar: películas, series, tem
 
 Ejemplo incluido: [`lists/doomsday.yaml`](lists/doomsday.yaml), la ruta cronológica hacia *Vengadores: Doomsday* (películas completas y solo los episodios imprescindibles de cada serie).
 
-## Uso sin comandos (Docker Desktop u OrbStack)
+## Instalación
+
+Este repositorio publica una única imagen, `ghcr.io/pedrit01/trakt-manager`, para `linux/amd64` y `linux/arm64`. Las dos formas de instalarlo usan esa misma imagen, así que no hace falta construir nada:
+
+| Etiqueta | Qué contiene |
+| --- | --- |
+| `latest` | La última versión de `main`. |
+| `0.1.0`, `0.1`… | Una versión concreta, publicada con cada [release](https://github.com/pedrit01/trakt-manager/releases). |
+
+### Con Docker Desktop u OrbStack (sin terminal)
 
 No hace falta clonar el repositorio ni abrir una terminal.
 
@@ -18,24 +27,26 @@ No hace falta clonar el repositorio ni abrir una terminal.
 
 La configuración, el token de Trakt y las definiciones que guardes desde la interfaz viven en `/data`, así que se conservan al recrear o actualizar el contenedor si mantienes el mismo volumen.
 
-## La interfaz web
+### Con docker compose
 
-- **Trakt**: pulsa «Conectar con Trakt», abre la URL que aparece (en cualquier dispositivo), introduce el código y confirma en trakt.tv. La página detecta la confirmación sola. «Desconectar» cierra la sesión.
-- **Definiciones**: lista las incluidas en la imagen y las tuyas. Puedes pegar o subir un `.yaml`/`.json`, validarlo sin tocar Trakt, guardarlo, descargarlo y borrarlo (solo las tuyas). Si guardas una con el mismo nombre que una incluida, la tuya la sustituye.
-- **Previsualizar / sincronizar**: muestra qué ha encontrado Trakt para cada entrada (título, año e id) y qué no. Antes de sincronizar de verdad, enseña los cambios y pide confirmación. Si sincronizas sin «incluir extras», los extras añadidos en una sincronización anterior se quitan, porque la lista refleja la definición con las opciones elegidas.
-- **Mis listas**: tus listas de Trakt y sus elementos en orden.
-- **Ajustes**: muestra de dónde sale cada clave, permite cambiar las credenciales de Trakt (cambiar el Client ID cierra la sesión, porque el token es de la aplicación anterior) y regenerar la clave de API (la anterior deja de valer al instante).
-
-Al entrar, la clave se guarda solo para esa pestaña, salvo que marques «Recordarla en este navegador». «Salir» la olvida.
-
-## Con docker compose (desde el código)
+Clona el repositorio para tener el `docker-compose.yml` y las definiciones de ejemplo de `lists/`. `docker compose up` descarga la imagen publicada:
 
 ```bash
-docker compose up -d --build
+git clone https://github.com/pedrit01/trakt-manager.git
+cd trakt-manager
+docker compose up -d
 docker compose ps          # el servicio debe aparecer como "healthy"
 ```
 
 Después abre <http://127.0.0.1:8000/> y sigue el asistente (el código sale en `docker compose logs`).
+
+Por defecto se usa `latest`. Para fijar una versión, pon `TRAKT_MANAGER_VERSION=0.1.0` en `.env`. Para actualizar:
+
+```bash
+git pull                   # definiciones de ejemplo y docker-compose.yml al día
+docker compose pull        # nueva imagen
+docker compose up -d
+```
 
 También puedes configurarlo por variables de entorno en lugar de con el asistente: `cp .env.example .env` y rellena `TRAKT_CLIENT_ID` y `API_KEY` (y `TRAKT_CLIENT_SECRET` solo si tu aplicación de Trakt lo tiene). Lo que venga del entorno **tiene prioridad** y la interfaz lo muestra como no editable.
 
@@ -47,9 +58,19 @@ docker compose run --rm trakt-manager sync lists/doomsday.yaml --dry-run
 docker compose run --rm trakt-manager sync lists/doomsday.yaml
 ```
 
-Las definiciones de `lists/` se montan en el contenedor, así que se pueden editar sin reconstruir la imagen.
+Las definiciones de `lists/` se montan en el contenedor, así que puedes editarlas sin descargar ni construir otra imagen.
 
-### Acceso desde otros equipos
+## La interfaz web
+
+- **Trakt**: pulsa «Conectar con Trakt», abre la URL que aparece (en cualquier dispositivo), introduce el código y confirma en trakt.tv. La página detecta la confirmación sola. «Desconectar» cierra la sesión.
+- **Definiciones**: lista las incluidas en la imagen y las tuyas. Puedes pegar o subir un `.yaml`/`.json`, validarlo sin tocar Trakt, guardarlo, descargarlo y borrarlo (solo las tuyas). Si guardas una con el mismo nombre que una incluida, la tuya la sustituye.
+- **Previsualizar / sincronizar**: muestra qué ha encontrado Trakt para cada entrada (título, año e id) y qué no. Antes de sincronizar de verdad, enseña los cambios y pide confirmación. Si sincronizas sin «incluir extras», los extras añadidos en una sincronización anterior se quitan, porque la lista refleja la definición con las opciones elegidas.
+- **Mis listas**: tus listas de Trakt y sus elementos en orden.
+- **Ajustes**: muestra de dónde sale cada clave, permite cambiar las credenciales de Trakt (cambiar el Client ID cierra la sesión, porque el token es de la aplicación anterior) y regenerar la clave de API (la anterior deja de valer al instante).
+
+Al entrar, la clave se guarda solo para esa pestaña, salvo que marques «Recordarla en este navegador». «Salir» la olvida.
+
+## Acceso desde otros equipos
 
 La interfaz y la API escriben en tu cuenta de Trakt, así que conviene saber quién llega a ellas:
 
@@ -141,7 +162,10 @@ Las notas que se guardan en Trakt tienen este formato: `"<bloque> | <nota>"` par
 
 ## Desarrollo
 
+Para probar cambios en el código, añade `--build`. Así compose construye la imagen desde tu copia local en lugar de descargar la publicada:
+
 ```bash
+docker compose up -d --build                              # GUI y API con tu código
 docker compose run --rm --build tests                     # todos los tests (Python 3.12)
 docker compose run --rm tests tests/test_sync.py -q       # un fichero
 docker compose run --rm tests -k shared_notes             # tests que contengan un nombre
